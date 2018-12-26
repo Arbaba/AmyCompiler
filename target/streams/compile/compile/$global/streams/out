@@ -1,0 +1,13 @@
+[0m[[0m[33mwarn[0m] [0m[0m/Users/fredericgessler/Documents/ba5/cc/AmyCompiler/src/amyc/analyzer/NameAnalyzer.scala:48:22: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: (_, List(_, _)), (_, Nil)[0m
+[0m[[0m[33mwarn[0m] [0m[0m    modNames foreach {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                     ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/Users/fredericgessler/Documents/ba5/cc/AmyCompiler/src/amyc/analyzer/TypeChecker.scala:106:50: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following input: (None, None)[0m
+[0m[[0m[33mwarn[0m] [0m[0m					def getFunOrBuilder(): (List[Type], Type) = (table getConstructor qname, table getFunction qname) match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m					                                            ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/Users/fredericgessler/Documents/ba5/cc/AmyCompiler/src/amyc/codegen/CodeGen.scala:174:6: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following input: (None, None)[0m
+[0m[[0m[33mwarn[0m] [0m[0m					(table getConstructor qname, table getFunction qname) match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m					^[0m
+[0m[[0m[33mwarn[0m] [0m[0mthree warnings found[0m

@@ -1,0 +1,72 @@
+[0m[[0m[0minfo[0m] [0m[0m[34mTest run started[0m[0m
+[0m[[0m[0minfo[0m] [0m[0mTest amyc.test.[33mParserTests[0m.[36mtestEmpty[0m started[0m
+[0m[[0m[31merror[0m] [0m[0mTest amyc.test.[33mParserTests[0m.[31mtestEmpty[0m failed: scala.[31mNotImplementedError[0m: an implementation is missing, took 0.001 sec[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.Predef$.$qmark$qmark$qmark(Predef.scala:284)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.readToken$1(Lexer.scala:110)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.nextToken$1(Lexer.scala:78)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.tokenStream$1(Lexer.scala:133)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.lexFile(Lexer.scala:138)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.$anonfun$run$1(Lexer.scala:143)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.collection.immutable.Stream.flatMap(Stream.scala:486)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.run(Lexer.scala:143)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.run(Lexer.scala:11)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.utils.Pipeline$$anon$1.run(Pipeline.scala:10)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.utils.Pipeline$$anon$1.run(Pipeline.scala:10)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.CompilerTest.runPipeline(CompilerTest.scala:12)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.CompilerTest.$anonfun$runPipelineRedirected$1(CompilerTest.scala:21)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:12)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.util.DynamicVariable.withValue(DynamicVariable.scala:58)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.Console$.withIn(Console.scala:226)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.TestUtils.$anonfun$testWithRedirectedIO$2(TestUtils.scala:18)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.util.DynamicVariable.withValue(DynamicVariable.scala:58)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.Console$.withErr(Console.scala:192)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.TestUtils.$anonfun$testWithRedirectedIO$1(TestUtils.scala:17)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.util.DynamicVariable.withValue(DynamicVariable.scala:58)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.Console$.withOut(Console.scala:163)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.TestUtils.testWithRedirectedIO(TestUtils.scala:16)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.TestUtils.testWithRedirectedIO$(TestUtils.scala:11)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.CompilerTest.testWithRedirectedIO(CompilerTest.scala:8)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.CompilerTest.runPipelineRedirected(CompilerTest.scala:21)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.CompilerTest.compareOutputs(CompilerTest.scala:53)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.TestSuite.shouldOutput(TestSuite.scala:25)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.TestSuite.shouldOutput(TestSuite.scala:30)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.ParserTests.testEmpty([35mParserTests.scala[0m:[33m13[0m)[0m
+[0m[[0m[31merror[0m] [0m[0m    ...[0m
+[0m[[0m[0mdebug[0m] [0m[0mTest amyc.test.[33mParserTests[0m.[36mtestEmpty[0m finished, took 0.008 sec[0m
+[0m[[0m[0minfo[0m] [0m[0mTest amyc.test.[33mParserTests[0m.[36mtestEmptyFile[0m started[0m
+[0m[[0m[0mdebug[0m] [0m[0mTest amyc.test.[33mParserTests[0m.[36mtestEmptyFile[0m finished, took 0.113 sec[0m
+[0m[[0m[0minfo[0m] [0m[0mTest amyc.test.[33mParserTests[0m.[36mtestLiterals[0m started[0m
+[0m[[0m[31merror[0m] [0m[0mTest amyc.test.[33mParserTests[0m.[31mtestLiterals[0m failed: scala.[31mNotImplementedError[0m: an implementation is missing, took 0.002 sec[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.Predef$.$qmark$qmark$qmark(Predef.scala:284)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.readToken$1(Lexer.scala:110)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.nextToken$1(Lexer.scala:78)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.tokenStream$1(Lexer.scala:133)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.lexFile(Lexer.scala:138)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.$anonfun$run$1(Lexer.scala:143)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.collection.immutable.Stream.flatMap(Stream.scala:486)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.run(Lexer.scala:143)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.parsing.Lexer$.run(Lexer.scala:11)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.utils.Pipeline$$anon$1.run(Pipeline.scala:10)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.utils.Pipeline$$anon$1.run(Pipeline.scala:10)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.CompilerTest.runPipeline(CompilerTest.scala:12)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.CompilerTest.$anonfun$runPipelineRedirected$1(CompilerTest.scala:21)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:12)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.util.DynamicVariable.withValue(DynamicVariable.scala:58)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.Console$.withIn(Console.scala:226)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.TestUtils.$anonfun$testWithRedirectedIO$2(TestUtils.scala:18)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.util.DynamicVariable.withValue(DynamicVariable.scala:58)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.Console$.withErr(Console.scala:192)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.TestUtils.$anonfun$testWithRedirectedIO$1(TestUtils.scala:17)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.util.DynamicVariable.withValue(DynamicVariable.scala:58)[0m
+[0m[[0m[31merror[0m] [0m[0m    at scala.Console$.withOut(Console.scala:163)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.TestUtils.testWithRedirectedIO(TestUtils.scala:16)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.TestUtils.testWithRedirectedIO$(TestUtils.scala:11)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.CompilerTest.testWithRedirectedIO(CompilerTest.scala:8)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.CompilerTest.runPipelineRedirected(CompilerTest.scala:21)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.CompilerTest.compareOutputs(CompilerTest.scala:53)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.TestSuite.shouldOutput(TestSuite.scala:25)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.TestSuite.shouldOutput(TestSuite.scala:30)[0m
+[0m[[0m[31merror[0m] [0m[0m    at amyc.test.ParserTests.testLiterals([35mParserTests.scala[0m:[33m14[0m)[0m
+[0m[[0m[31merror[0m] [0m[0m    ...[0m
+[0m[[0m[0mdebug[0m] [0m[0mTest amyc.test.[33mParserTests[0m.[36mtestLiterals[0m finished, took 0.008 sec[0m
+[0m[[0m[0minfo[0m] [0m[0m[34mTest run finished: [0m[31m2 failed[0m[34m, [0m[34m0 ignored[0m[34m, 3 total, 0.17s[0m[0m
