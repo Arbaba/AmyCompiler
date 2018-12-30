@@ -12,6 +12,7 @@ trait Signature[RT <: Type]{
 }
 // The signature of a function in the symbol table
 case class FunSig(argTypes: List[Type], retType: Type, owner: Identifier) extends Signature[Type]
+case class OpSig(argTypes: List[Type], retType: Type, owner: Identifier, precedence: Int) extends Signature[Type]
 // The signature of a constructor in the symbol table
 case class ConstrSig(argTypes: List[Type], parent: Identifier, index: Int) extends Signature[ClassType] {
   val retType = ClassType(parent)
@@ -25,7 +26,7 @@ class SymbolTable {
 
 	private val types = HashMap[Identifier, Identifier]()
   private val functions = HashMap[Identifier, FunSig]()
-	private val operators = HashMap[Identifier, FunSig]()
+	private val operators = HashMap[Identifier, OpSig]()
 
 	private val constructors = HashMap[Identifier, ConstrSig]()
 
@@ -55,7 +56,6 @@ class SymbolTable {
   def getType(symbol: Identifier) = types.get(symbol)
 
   def addConstructor(owner: String, name: String, argTypes: List[Type], parent: Identifier) = {
-		//println(s"from $owner $name $parent")
 		val s = Identifier.fresh(name)
     defsByName += (owner, name) -> s
     constructors += s -> ConstrSig(
@@ -89,4 +89,11 @@ class SymbolTable {
     } yield (sym, sig)
   }
   def getFunction(symbol: Identifier) = functions.get(symbol)
+	def addOperator(owner: String, name: String, argTypes: List[Type], retType: Type, precedence: Int) = {
+    val s = Identifier.fresh(name)
+    defsByName += (owner, name) -> s
+    operators += s -> OpSig(argTypes, retType, getModule(owner).getOrElse(sys.error(s"Module $owner not found!")), precedence)
+    s
+  }
+	def getOperator(symbol: Identifier) = operators.get(symbol)
 }

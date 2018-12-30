@@ -78,11 +78,6 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
 			N.FunDef(name, param, ret, bdy) <- mod.defs
 		} table addFunction(owner, name, param map (_.tt) map { case tree: N.TypeTree => transformType(tree, owner)},transformType(ret, owner))
 
-		println(s"types		${table.types}")
-
-		println(s"constructs 		${table.constructors}")
-		println(s"defs 		${table.defsByName}")
-		println(s"modules		${table.modules}")
     // Step 6: We now know all definitions in the program.
     //         Reconstruct modules and analyse function bodies/ expressions
     // This part is split into three transfrom functions,
@@ -143,23 +138,18 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
     def transformExpr(expr: N.Expr)
                      (implicit module: String, names: (Map[String, Identifier], Map[String, Identifier])): S.Expr = {
 			val (params, locals) = names
-			////println(s"analysing $expr...")
       val res = expr match {
         case N.Match(scrut, cases) =>
-					////println(s"MATCH s$scrut => $cases")
           // Returns a transformed pattern along with all bindings
           // from strings to unique identifiers for names bound in the pattern.
           // Also, calls 'fatal' if a new name violates the Amy naming rules.
           def transformPattern(pat: N.Pattern): (S.Pattern, List[(String, Identifier)]) = {
-						//println(s"transforming $pat...")
             pat match {
 							case N.WildcardPattern() =>
-								//println("wildcard")
 								(S.WildcardPattern(), Nil)
 							case N.LiteralPattern(lit) => (S.LiteralPattern(transformLit(lit)), Nil)
 							case N.IdPattern(name) =>
 								val newId = Identifier fresh name
-								//println(s"new: $newId")
 								(S.IdPattern(newId), (name, newId) :: Nil)
 							case N.CaseClassPattern(qname, args) =>
 								//val name = Identifier fresh qname.name
@@ -167,7 +157,6 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
 								bindings.flatten groupBy { case (a, b) => a } foreach {
 									case (s, ids) => if(ids.size > 1) fatal("")
 								}
-								println(s"${qname.name} >>> ${qname.module}")
 								(S.CaseClassPattern(table getType (qname.module.get, qname.name) match {
 										case Some(tpeCons) => tpeCons
 										case None => fatal(s"could not get type ${qname.name} in ${qname.module}")
@@ -180,7 +169,6 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
           def transformCase(cse: N.MatchCase) = {
             val N.MatchCase(pat, rhs) = cse
             val (newPat, moreLocals) = transformPattern(pat)
-						//println(s"locals($cse)::::${moreLocals.toMap}")
 						moreLocals foreach { case (s, id) => if((names._2 contains s) || (names._1 contains s)) fatal("bad thing") }
 						S.MatchCase(newPat, transformExpr(rhs)(module, (names._1, names._2 ++ moreLocals.toMap)))
           }

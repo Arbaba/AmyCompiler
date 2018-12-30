@@ -29,7 +29,6 @@ object TypeChecker extends Pipeline[(Program, SymbolTable), (Program, SymbolTabl
     //  extend these, e.g., to account for local variables).
     // Returns a list of constraints among types. These will later be solved via unification.
     def genConstraints(e: Expr, expected: Type)(implicit env: Map[Identifier, Type]): List[Constraint] = {
-			//println(s"expected $expected for $e")
 			// This helper returns a list of a single constraint recording the type
       //  that we found (or generated) for the current expression `e`
       def topLevelConstraint(found: Type): List[Constraint] =
@@ -64,14 +63,7 @@ object TypeChecker extends Pipeline[(Program, SymbolTable), (Program, SymbolTabl
 							case LiteralPattern(litty) => (genConstraints(litty, scrutExpected), Map())
 							case CaseClassPattern(qname, args) =>
 								val constructConstr = Constraint(ClassType(qname), scrutExpected, e.position)
-								//val (cstr, en) = args.flatMap(arg => handlePattern(arg, env(arg.))).unzip
-								println(s"qname: $qname types:: ${table.types}")
-								println(s"Constructor all ${(table.constructors)}")
-								println(s"Constructor manual ${(table.constructors.get(qname))}")
-								println(s"Constructor ${(table getConstructor qname)}")
-								println(s"Constructors ${(table getConstructorsForType qname)}")
-								println(s"Constructor unqualified ${(table.getConstructor("L", qname.name))}")
-								
+
 								val argTypes: List[Type] = (table getConstructor qname).get.argTypes
 								val css: List[(List[Constraint], Map[Identifier, Type])] = (args zip argTypes).map{ case (p, t) => handlePattern(p, t) }
 								type Pat = (List[Constraint], Map[Identifier, Type])
@@ -165,7 +157,6 @@ object TypeChecker extends Pipeline[(Program, SymbolTable), (Program, SymbolTabl
       // Put function parameters to the symbol table, then typecheck them against the return type
       mod.defs.collect { case FunDef(_, params, retType, body) =>
         val env = params.map{ case ParamDef(name, tt) => name -> tt.tpe }.toMap
-				//println(s"env $env")
         solveConstraints(genConstraints(body, retType.tpe)(env))
       }
 
