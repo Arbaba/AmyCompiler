@@ -96,4 +96,10 @@ class SymbolTable {
     s
   }
 	def getOperator(symbol: Identifier) = operators.get(symbol)
+	def getOperator(owner: String, name: String): Option[(Identifier, OpSig)] = {
+    for {
+      sym <- defsByName.get(owner, name)
+      sig <- operators.get(sym)
+    } yield (sym, sig)
+  }
 }

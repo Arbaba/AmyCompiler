@@ -210,15 +210,16 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
 						case Some(actual) => actual
 						case None => module
 					}
-					table getFunction (mod, qname.name) match {
-						case None => table getConstructor (mod, qname.name)  match {
-							case None => fatal(s"$qname not in environment")
-							case Some((id, sig)) =>
-								if(args.size != sig.argTypes.size) fatal("UndefinedConstructor")
-								S.Call(id, args map transformExpr)
-						}
+					(table getFunction (mod, qname.name),
+					table getConstructor (mod, qname.name),
+					table getOperator (mod, qname.name)) match {
+						case (_, _, Some(operator)) => //we already know that the number of arguments matches
+							S.Call(operator._1, args map transformExpr)
+						case (_, Some((id, sig)), _) =>
+							if(args.size != sig.argTypes.size) fatal("UndefinedConstructor")
+							S.Call(id, args map transformExpr)
 						//Regular function
-						case Some(s) =>
+						case (Some(s), _, _) =>
 							if(args.size != s._2.argTypes.size) fatal("arguments!")
 							S.Call(s._1, args map transformExpr)//(modules, names._1, names._2 ++ ))
 					}
