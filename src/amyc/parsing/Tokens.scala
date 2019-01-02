@@ -1,7 +1,6 @@
 package amyc
 package parsing
 
-import grammarcomp.grammar.CFGrammar.TerminalClass
 import utils.Positioned
 
 sealed class Token extends Positioned
@@ -31,7 +30,6 @@ object Tokens {
   case class TRUE()     extends Token
   case class UNIT()     extends Token
   case class VAL()      extends Token
-	case class OPERATOR() extends Token
 
   /* Operators */
   case class SEMICOLON()  extends Token // ;
@@ -48,7 +46,6 @@ object Tokens {
   case class CONCAT()     extends Token // ++
   case class BANG()       extends Token // !
 
-
   /* Delimiters and wildcard */
   case class LBRACE()     extends Token // {
   case class RBRACE()     extends Token // }
@@ -59,6 +56,7 @@ object Tokens {
   case class DOT()        extends Token // .
   case class EQSIGN()     extends Token // =
   case class RARROW()     extends Token // =>
+  case class OPERATOR()     extends Token // =>
 
   case class UNDERSCORE() extends Token // _
 
@@ -71,12 +69,10 @@ object Tokens {
   // String literals
   case class STRINGLIT(value: String) extends Token with TerminalClass
 
-	case class OPLIT(value: String) extends Token with TerminalClass
-
   // These three tokens are meant to represent their respective category in the parser
   val IDSENT = ID("")
   val INTLITSENT = INTLIT(0)
   val STRINGLITSENT = STRINGLIT("")
-	val OPLITSENT = OPLIT("")
+
 
 }
