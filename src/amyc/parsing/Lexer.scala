@@ -31,6 +31,7 @@ object Lexer extends Pipeline[List[File], Stream[Token]] {
     case "Int"      => Some(INT())
     case "match"    => Some(MATCH())
     case "object"   => Some(OBJECT())
+		case "operator" => Some(OPERATOR())
     case "String"   => Some(STRING())
     case "true"     => Some(TRUE())
     case "Unit"     => Some(UNIT())
@@ -88,7 +89,6 @@ object Lexer extends Pipeline[List[File], Stream[Token]] {
         readToken(stream)
       }
     }
-//8c2683f53ad01863ee5244c98244ec5b
     /** Reads the next token from the stream. Assumes no whitespace or comments at the beginning.
       * Returns the first token and the remaining input that did not get consumed.
       */
@@ -105,6 +105,7 @@ object Lexer extends Pipeline[List[File], Stream[Token]] {
       def useOne(t: Token) = (t.setPos(currentPos), rest)
       // Returns input token with correct position and uses up two characters of the stream
       def useTwo(t: Token) = (t.setPos(currentPos), rest.tail)
+
       currentChar match {
         case `EndOfFile` => useOne(EOF())
 
@@ -114,21 +115,12 @@ object Lexer extends Pipeline[List[File], Stream[Token]] {
             Character.isLetterOrDigit(ch) || ch == '_'
           }
           val word = wordLetters.map(_._1).mkString
-          // Hint: Decide if it's a letter or reserved word (use our infrastructure!),
-          // and return the correct token, along with the remaining input stream.
-          // Make sure you set the correct position for the token.
-					//println(word)
 					(keywords(word) getOrElse ID(word) setPos currentPos, afterWord)
-
-
         // Int literal
         case _ if Character.isDigit(currentChar) =>
-          // Hint: Use a strategy similar to the previous example.
-          // Make sure you fail for integers that do not fit 32 bits.
           val (digits, afterNumber) = stream span { case (dig, _) =>
 						Character isDigit dig
 					}
-					//to string and then parseInt
 					val numbers = digits.map(_._1.toString).foldLeft("")((x:String, y:String) => x + y)
 					try {
 			        (INTLIT(numbers.toInt) setPos currentPos, afterNumber)
@@ -151,21 +143,10 @@ object Lexer extends Pipeline[List[File], Stream[Token]] {
 					val string: String = stringlit.map(_._1.toString).foldLeft("")((x, y) => x + y)
 					(STRINGLIT(string) setPos currentPos, afterString.tail)
 				case _ =>
-					currentChar match {
-						case '<' => if(nextChar == '=') useTwo(LESSEQUALS()) else useOne(LESSTHAN())
-						case '&' => if(nextChar == '&') useTwo(AND()) else {
-							ctx.reporter.fatal("Unkown character")
-							useOne(BAD())
-						}
-						case '|' => if(nextChar == '|') useTwo(OR()) else {
-							ctx.reporter.fatal("Unkown character")
-							useOne(BAD())
-						}
-						case '=' =>
-							if(nextChar == '=') useTwo(EQUALS()) else if(nextChar == '>') useTwo(RARROW()) else useOne(EQSIGN())
-						case '+' => if(nextChar == '+') useTwo(CONCAT()) else useOne(PLUS())
-						//case '\n' => readToken(rest) //skip
-						case _ => useOne(currentChar match {
+					val (operator, restOfStream) = stream span { case(c, _) => c != ' ' && isStringChar(c) }
+					operator.size match {
+						case 0 => useOne(BAD())
+						case 1 => useOne(operator(0)._1 match {
 							case ';' => SEMICOLON()
 							case '-' => MINUS()
 							case '*' => TIMES()
@@ -180,17 +161,27 @@ object Lexer extends Pipeline[List[File], Stream[Token]] {
 							case ':' => COLON()
 							case '.' => DOT()
 							case '_' => UNDERSCORE()
-							case _ => {
-								ctx.reporter.fatal("Unrecognized input")
-								BAD()
-							}
+							case '<' => LESSTHAN()
+							case '=' => EQSIGN()
+							case '+' => PLUS()
+							case x   => OPLIT(x.toString)
 						})
+						case 2 =>
+							val (c1, _) #:: (c2, _) #:: e  = operator
+							useTwo((c1, c2) match {
+								case ('<', '=') => LESSEQUALS()
+								case ('&', '&') => AND()
+								case ('|', '|') => OR()
+								case ('=', '=') => EQUALS()
+								case ('=', '>') => RARROW()
+								case ('+', '+') => CONCAT()
+								case (a, b) => OPLIT(a.toString + b.toString)
+							})
+						case _ =>
+							val symbol = operator map (_._1.toString) reduceLeft (_ + _)
+							(OPLIT(symbol) setPos currentPos, restOfStream)
 					}
 
-
-					  // TODO: Replace this catch-all by additional cases for other tokens
-               // (You can look at Tokens.scala for an exhaustive list of tokens)
-               // There should also be a case for all remaining (invalid) characters in the end
       }
     }
 
