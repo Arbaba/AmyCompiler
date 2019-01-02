@@ -142,24 +142,28 @@ object Lexer extends Pipeline[List[File], Stream[Token]] {
 					}
 					val string: String = stringlit.map(_._1.toString).foldLeft("")((x, y) => x + y)
 					(STRINGLIT(string) setPos currentPos, afterString.tail)
+				case '{' => useOne(LBRACE())
+				case '}' => useOne(RBRACE())
+				case '(' => useOne(LPAREN())
+				case ')' => useOne(RPAREN())
+				case ';' => useOne(SEMICOLON())
+				case '.' => useOne(DOT())
+				case ',' => useOne(COMMA())
 				case _ =>
-					val (operator, restOfStream) = stream span { case(c, _) => c != ' ' && isStringChar(c) }
+					val delimiters = Set('{', '}', '(', ')', ';', ',', '.')
+					def isDelimiter(c: Character) = delimiters contains c
+					val (operator, restOfStream) = stream span {
+						case(c, _) => c != ' ' && isStringChar(c) && !isDelimiter(c) && !Character.isLetterOrDigit(c)
+					}
 					operator.size match {
 						case 0 => useOne(BAD())
 						case 1 => useOne(operator(0)._1 match {
-							case ';' => SEMICOLON()
 							case '-' => MINUS()
 							case '*' => TIMES()
 							case '/' => DIV()
 							case '%' => MOD()
 							case '!' => BANG()
-							case '{' => LBRACE()
-							case '}' => RBRACE()
-							case '(' => LPAREN()
-							case ')' => RPAREN()
-							case ',' => COMMA()
 							case ':' => COLON()
-							case '.' => DOT()
 							case '_' => UNDERSCORE()
 							case '<' => LESSTHAN()
 							case '=' => EQSIGN()
