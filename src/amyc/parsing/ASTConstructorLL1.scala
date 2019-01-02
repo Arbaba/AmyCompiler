@@ -99,6 +99,30 @@ class ASTConstructorLL1 extends ASTConstructor {
  }
 
 
+  override def constructDef0(pTree: NodeOrLeaf[Token]): ClassOrFunDef = {
+    pTree match {
+      case Node('OperatorDef ::=_, List(Leaf(operator), Leaf(it@INTLIT(precedence)),  Leaf(df), name, _, params, _, _, retType, _, _, body, _)) =>
+        OpDef(constructOperatorName(name)._1,
+          constructList(params, constructParam, hasComma = true),
+          constructType(retType),
+          constructExpr(body),
+          precedence
+        ).setPos(operator)
+      case _ =>
+        super.constructDef0(pTree)
+    }
+  }
+
+
+  def constructOperatorName(ptree: NodeOrLeaf[Token]): (String, Positioned) = {
+    ptree match {
+      case Node('Operator ::= _, List(Leaf(id@OPLIT(name)))) =>
+        (name, id)
+    }
+  }
+
+
+
   override def constructCase(pTree: NodeOrLeaf[Token]): MatchCase = {
     pTree match {
       case Node('Case ::= _, List(Leaf(ct), pat, _, expr)) =>
@@ -190,6 +214,7 @@ class ASTConstructorLL1 extends ASTConstructor {
           case 'Plus_MinusTerm => constructPlusMinusTerm(ptree)
           case 'MUL_DIV_MODTerm => constructMulDivModTerm(ptree)
           case 'FinalTerm => constructFinalTerm(ptree)
+          case 'LastLevelTerm => constructLastLevelTerm(ptree)
         }
     }
   }
@@ -289,18 +314,34 @@ class ASTConstructorLL1 extends ASTConstructor {
 
 def constructMulDivModTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
   ptree match  {
-    case Node('MUL_DIV_MODTerm  ::= List('FinalTerm, 'MUL_DIV_MODTermList), List(finalterm, muldivmodtermlist)) =>
+    case Node('MUL_DIV_MODTerm  ::= List('LastLevelTerm, 'MUL_DIV_MODTermList), List(lastLevel, muldivmodtermlist)) =>
       muldivmodtermlist match {
         case Node('MUL_DIV_MODTermList::= List('MUL_DIV_MOD ,_), List(mdv, muldivmodterm)) =>
           mdv match {
             case Node('MUL_DIV_MOD ::= _, List(op)) =>
-              constructOpExpr(constructFinalTerm(finalterm),muldivmodtermlist )
+              constructOpExpr(constructLastLevelTerm(lastLevel),muldivmodtermlist )
           }
         case Node(_, List()) =>
-          constructFinalTerm(finalterm)
+          constructLastLevelTerm(lastLevel)
       }
   }
 }
+
+
+  def constructLastLevelTerm(pTree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
+    pTree match {
+      case Node('LastLevelTerm ::= List('FinalTerm, 'LastLevelList),List(finalTerm, lastLevelList)) =>
+        lastLevelList match {
+          case Node('LastLevelList ::= List('Operator,_), List(operator, lastLevelterm)) =>
+            operator match {
+              case Node('Operator ::= _, List(op)) =>
+                constructOpExpr(constructFinalTerm(finalTerm), lastLevelList)
+            }
+          case Node(_, List()) =>
+            constructFinalTerm(finalTerm)
+        }
+    }
+  }
 // Need to add  Minus
 def constructFinalTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
  // println(ptree)
@@ -433,7 +474,6 @@ def constructFinalTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
             (QualifiedName(None, name), pos)
         }
     }
-
   }
 
   def constructExprList(pTree: NodeOrLeaf[Token]): List[NominalTreeModule.Expr] = {

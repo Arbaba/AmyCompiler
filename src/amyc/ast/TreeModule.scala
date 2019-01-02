@@ -41,7 +41,6 @@ trait TreeModule {
   case class BooleanLiteral(value: Boolean) extends Literal[Boolean]
   case class StringLiteral(value: String) extends Literal[String]
   case class UnitLiteral() extends Literal[Unit] { val value: Unit = () }
-
   // Binary operators
   case class Plus(lhs: Expr, rhs: Expr) extends Expr
   case class Minus(lhs: Expr, rhs: Expr) extends Expr
@@ -54,7 +53,6 @@ trait TreeModule {
   case class Or(lhs: Expr, rhs: Expr) extends Expr
   case class Equals(lhs: Expr, rhs: Expr) extends Expr
   case class Concat(lhs: Expr, rhs: Expr) extends Expr
-
   // Unary operators
   case class Not(e: Expr) extends Expr
   case class Neg(e: Expr) extends Expr
@@ -91,10 +89,13 @@ trait TreeModule {
   case class FunDef(name: Name, params: List[ParamDef], retType: TypeTree, body: Expr) extends ClassOrFunDef {
     def paramNames = params.map(_.name)
   }
+
+  case class OpDef(name: Name, params: List[ParamDef], retType: TypeTree, body: Expr, precedence: Int) extends ClassOrFunDef {
+    def paramNames = params.map(_.name)
+  }
   case class AbstractClassDef(name: Name) extends ClassOrFunDef
   case class CaseClassDef(name: Name, fields: List[TypeTree], parent: Name) extends ClassOrFunDef
   case class ParamDef(name: Name, tt: TypeTree) extends Definition
-
   // Types
   trait Type
   case object IntType extends Type {

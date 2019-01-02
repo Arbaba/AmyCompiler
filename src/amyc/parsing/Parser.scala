@@ -66,14 +66,15 @@ object Parser extends Pipeline[Stream[Token], Program] {
     'AbstractClassDef ::= ABSTRACT() ~ CLASS() ~ 'Id,
     'CaseClassDef ::= CASE() ~ CLASS() ~ 'Id ~ LPAREN() ~ 'Params ~ RPAREN() ~ EXTENDS() ~ 'Id,
 
+    'FunDef ::=  DEF() ~ 'Id ~ LPAREN() ~ 'Params ~ RPAREN() ~ COLON() ~ 'Type ~ EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE() ,
+    'Operator ::= OPLITSENT,
 
-    'FunDef ::= 'Op ~ DEF() ~ 'Id ~ LPAREN() ~ 'Params ~ RPAREN() ~ COLON() ~ 'Type ~ EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE(),
-
-
+    'OperatorDef ::= OPERATOR() ~ INTLITSENT ~  DEF() ~ 'Operator ~ LPAREN() ~ 'Params ~ RPAREN() ~ COLON() ~ 'Type ~ EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE(),
     'Params ::= epsilon() | 'Param ~ 'ParamList,
     'ParamList ::= epsilon() | COMMA() ~ 'Param  ~ 'ParamList,
     'Param ::= 'Id ~ COLON() ~ 'Type,
-    'OptExpr ::= 'Expr | epsilon(),    'Op ::=  OPERATOR() | epsilon(),
+    'OptExpr ::= 'Expr | epsilon(),
+    'OptOp ::=  OPERATOR() | epsilon(),
 
     'ExprTail ::= SEMICOLON() ~ 'Expr | epsilon(),
     'Type ::= INT() | STRING() | BOOLEAN() | UNIT() | 'QName,
@@ -102,12 +103,13 @@ object Parser extends Pipeline[Stream[Token], Program] {
     'Plus_MinusTerm ::='MUL_DIV_MODTerm ~ 'Plus_MinusTermList,
 
     'MUL_DIV_MODTermList ::= 'MUL_DIV_MOD ~ 'MUL_DIV_MODTerm | epsilon(),
-    'MUL_DIV_MODTerm ::= 'LastLevel ~ 'MUL_DIV_MODTermList,
+    'MUL_DIV_MODTerm ::= 'LastLevelTerm ~ 'MUL_DIV_MODTermList,
 
-    'LastLevelList ::= 'Id ~ 'LastLevel | epsilon(),
-    'LastLevel ::= 'FinalTerm ~ 'LastLevelList,
+    //'LastLevelList ::= OPLITSENT ~ 'LastLevel | epsilon(),
+    'LastLevelList ::=  'Operator ~ 'LastLevelTerm | epsilon(),
+    'LastLevelTerm ::= 'FinalTerm ~ 'LastLevelList,
 
-     'FinalTerm ::= 'If | 'Error | 'Id ~ 'OptCall |'LiteralNoEmptyPar | 'EmptyParOrParExpr
+    'FinalTerm ::= 'If | 'Error | 'Id ~ 'OptCall |'LiteralNoEmptyPar | 'EmptyParOrParExpr
       | BANG() ~ 'FinalTerm | MINUS() ~ 'FinalTerm,
 
     'OptForQname ::= DOT() ~ 'Id | epsilon(),
@@ -116,6 +118,7 @@ object Parser extends Pipeline[Stream[Token], Program] {
     'ParExpr ::=  LPAREN() ~ 'Expr ~ RPAREN(),
     'Val ::= 'Id,
     'Call ::= 'QName ~ LPAREN() ~ 'Args ~ RPAREN(),
+   // 'OperatorCall ::=  OPLITSENT ~ 'Expr,
     'Error ::= ERROR() ~ LPAREN() ~ 'Expr ~ RPAREN(),
     'If ::= IF() ~ LPAREN() ~ 'Expr ~ RPAREN() ~ LBRACE() ~ 'Expr ~ RBRACE() ~ ELSE() ~ LBRACE() ~ 'Expr ~ RBRACE(),
 
