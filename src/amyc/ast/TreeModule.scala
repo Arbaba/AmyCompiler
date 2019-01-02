@@ -59,7 +59,7 @@ trait TreeModule {
 
   // Function/ type constructor call
   case class Call(qname : QualifiedName, argsList: List[Expr]) extends Expr
-
+  case class OpCall(qname : QualifiedName, argsList: List[Expr]) extends Expr
   // The ; operator
   case class Sequence(e1: Expr, e2: Expr) extends Expr
   // Local variable definition

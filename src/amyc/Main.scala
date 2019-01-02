@@ -17,8 +17,10 @@ object Main extends MainHelpers {
     val ctx = parseArgs(args)
     val pipeline =
       Lexer andThen
+      //PreAnalyzer andThen
       Parser andThen
-      NameAnalyzer// andThen
+      treePrinterN("tree")
+      //NameAnalyzer// andThen
       //TypeChecker// andThen
       //CodeGen andThen
       //CodePrinter
