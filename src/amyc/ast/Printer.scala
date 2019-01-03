@@ -93,7 +93,7 @@ trait Printer {
       case Call(name, args) =>
         name <:> "(" <:> Lined(args map (rec(_)), ", ") <:> ")"
       case OpCall(name, args) =>
-        name <:> "(" <:> Lined(args map (rec(_)), ", ") <:> ")"
+        "OpCall" <:> name <:> "(" <:> Lined(args map (rec(_)), ", ") <:> ")"
 
       case Sequence(lhs, rhs) =>
         val main = Stacked(

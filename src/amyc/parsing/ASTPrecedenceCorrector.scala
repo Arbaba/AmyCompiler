@@ -11,9 +11,9 @@ import amyc.analyzer.SymbolTable
 import ast.{Identifier, NominalTreeModule => N, SymbolicTreeModule => S}
 
 
-object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),N.Program] {
+object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Program, SymbolTable)] {
 
-  def run(ctx: Context)(p: N.Program, table: SymbolTable): N.Program = {
+  def run(ctx: Context)(v: (N.Program, SymbolTable)): (N.Program, SymbolTable) = {
     import ctx.reporter._
 
     def transformOpAndFunDef(expr: N.ClassOrFunDef)(implicit module: String): N.ClassOrFunDef = {
@@ -32,6 +32,7 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),N.Progr
 
       }
     }
+    val (p, table) = v
     val newProgram = N.Program(
       p.modules map { case mod@N.ModuleDef(name, defs, optExpr) =>
         N.ModuleDef(
