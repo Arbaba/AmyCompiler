@@ -43,7 +43,9 @@ object Arithmetic {
   ~a ? ~b & ~c @ ~d;
   a & b ? c;
   ~a & ~b;
-  a ? b & c @ d
+  a ? b & c @ d;
+
+  a @ b & c
 /*
   Std.printInt(pow(0, 10));
   Std.printInt(pow(1, 5));

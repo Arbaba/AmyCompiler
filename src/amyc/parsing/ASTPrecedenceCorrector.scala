@@ -57,7 +57,7 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
                     if(getOperatorPrecedence(leftOp) < getOperatorPrecedence(parentName)){
                       N.Call(leftOp, l :: N.Call(parentName, r :: transformExpr(args(1)) :: Nil ) :: Nil)
                     }else {
-                      N.Call(parentName, recLeft :: parentRight :: Nil)
+                      N.Call(parentName, recLeft :: transformExpr(args(1)) :: Nil)
                     }
                   case N.Call(unaryOp, List(arg)) =>
                     if(getOperatorPrecedence(unaryOp) < getOperatorPrecedence(parentName)){
