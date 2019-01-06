@@ -23,19 +23,19 @@ object Arithmetic {
     }
   }
 
+  operator 1 def  & (a: Int, b : Int): Int = {
+    a
+  }
   operator 2 def ? (a: Int): Int = {
     -!a
   }
 
-  operator 1 def  & (a: Int, b : Int): Int = {
-    a
-  }
 
   operator 3 def @(a :Int, b :Int): Int = {
     a
   }
 
-  operator 10 def ~(a :Int): Int = {
+  operator 0 def ~(a :Int): Int = {
     a
   }
 

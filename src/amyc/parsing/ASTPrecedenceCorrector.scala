@@ -27,19 +27,6 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
       }
     }
 
-    def getOperatorPrecedence(df: N.QualifiedName): Int = {
-      df match {
-        case N.QualifiedName(Some(module), name) =>
-          table.getOperator(module, name) match {
-            case Some((_, OpSig(_,_,_,precedence))) =>
-              precedence
-            case None =>
-              fatal(s"Operator $module.$name is not in the symbol table")
-          }
-        case N.QualifiedName(None, name) =>
-          fatal(s"Operator $name module not saved in the symbol table")
-      }
-    }
     def transformExpr(expr: N.Expr)(implicit module:String): N.Expr = {
       expr match {
         case parent@N.OpCall(parentName, args) =>
@@ -47,25 +34,30 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
             val (leftNode, rightNode ) : (Option[N.OpCall], Option[N.OpCall]) = (isOp(args.head), isOp(args(1)))
             (leftNode, rightNode ) match {
               case (Some(left), right ) =>
-
                 val recLeft = transformExpr(left)
-
+                val parentRight = transformExpr(args(1))
                 recLeft match {
                   case N.Call(leftOp, List(l,r)) =>
+
                     val (mod, name) = (leftOp.module, leftOp.name)
-                    val parentRight = transformExpr(r)
+
                     if(getOperatorPrecedence(leftOp) < getOperatorPrecedence(parentName)){
-                      N.Call(leftOp, l :: N.Call(parentName, r :: transformExpr(args(1)) :: Nil ) :: Nil)
+                      N.Call(leftOp, l :: N.Call(parentName, r :: parentRight :: Nil ) :: Nil)
                     }else {
-                      N.Call(parentName, recLeft :: transformExpr(args(1)) :: Nil)
+                      N.Call(parentName, recLeft :: parentRight :: Nil)
                     }
+
+
                   case N.Call(unaryOp, List(arg)) =>
+
                     if(getOperatorPrecedence(unaryOp) < getOperatorPrecedence(parentName)){
-                      N.Call(unaryOp, List(N.Call(parentName, List(arg, transformExpr(args(1))))))
+                      
+                      N.Call(unaryOp, List(N.Call(parentName, List(arg, parentRight))))
                     }else {
-                      N.Call(parentName, List(recLeft, transformExpr(args(1))))
+                      N.Call(parentName, List(recLeft, parentRight))
                     }
                 }
+
               case (None , _) =>
                 N.Call(parentName, args.map(transformExpr(_)))
             }
@@ -73,7 +65,7 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
                 N.Call(parentName, args.map(transformExpr(_)))
 
           } else {
-            expr
+            fatal(s"Unary operator $parentName cannot have $args.size arguments", expr.position)
           }
         case N.Call(qname, args)      =>  N.Call(qname, args.map(transformExpr(_)))
         case N.Sequence(e1, e2)       =>  N.Sequence(transformExpr(e1), transformExpr(e2))
@@ -92,6 +84,20 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
       expr match {
         case op@N.OpCall(_,_) => Some(op)
         case _ => None
+      }
+    }
+
+    def getOperatorPrecedence(df: N.QualifiedName): Int = {
+      df match {
+        case N.QualifiedName(Some(module), name) =>
+          table.getOperator(module, name) match {
+            case Some((_, OpSig(_,_,_,precedence))) =>
+              precedence
+            case None =>
+              fatal(s"Operator $module.$name is not in the symbol table")
+          }
+        case N.QualifiedName(None, name) =>
+          fatal(s"Operator $name module not saved in the symbol table")
       }
     }
     val newProgram = N.Program(
