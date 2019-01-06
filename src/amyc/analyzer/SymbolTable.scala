@@ -102,4 +102,7 @@ class SymbolTable {
       sig <- operators.get(sym)
     } yield (sym, sig)
   }
+
+
+  def printOperators = println(operators)
 }

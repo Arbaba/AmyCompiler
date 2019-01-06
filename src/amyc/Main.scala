@@ -19,9 +19,9 @@ object Main extends MainHelpers {
     val pipeline =
       Lexer andThen
       Parser andThen
-      treePrinterN("Tree after basic parser")
-     // PreAnalyzer andThen
-     // ASTPrecedenceCorrector //andThen
+      PreAnalyzer andThen
+      ASTPrecedenceCorrector andThen
+      treePrinterN("Tree after correction")
       //NameAnalyzer// andThen
       //TypeChecker// andThen
       //CodeGen andThen
@@ -58,11 +58,11 @@ trait MainHelpers {
     }
   }
 
-  def treePrinterN(title: String): Pipeline[NP, Unit] = {
-    new Pipeline[NP, Unit] {
-      def run(ctx: Context)(v: NP) = {
+  def treePrinterN(title: String): Pipeline[(NP,SymbolTable), Unit] = {
+    new Pipeline[(NP, SymbolTable), Unit] {
+      def run(ctx: Context)(v: (NP, SymbolTable)) = {
         println(title)
-        println(NominalPrinter(v))
+        println(NominalPrinter(v._1))
       }
     }
   }

@@ -23,14 +23,20 @@ object Arithmetic {
     }
   }
 
-  operator 1 def ? (a: Int): Int = {
+  operator 2 def ? (a: Int): Int = {
     -!a
   }
 
-  operator 2 def  & (a: Int, b : Int): Int = {
+  operator 1 def  & (a: Int, b : Int): Int = {
     a
   }
-  !a ? b & c;
+
+  operator 3 def @(a :Int, b :Int): Int = {
+    a
+  }
+  a ? b & c @ d;
+  a & b ? c;
+
   Std.printInt(pow(0, 10));
   Std.printInt(pow(1, 5));
   Std.printInt(pow(2, 10));

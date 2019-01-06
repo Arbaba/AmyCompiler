@@ -40,11 +40,10 @@ class ASTConstructorLL1 extends ASTConstructor {
      rightNode match {
          case Node(_, List(nextOpd, suf)) => // 'Expr? ::= Expr? ~ 'OpExpr,
            val nextAtom = findAndUseExpr(nextOpd)
-           print(op)
 
            op match {
              case Node('Operator ::=_, List(Leaf(OPLIT(operator)))) =>
-               constructOpExpr(OpCall(QualifiedName(None, operator), List(leftopd, nextAtom)), suf)
+               constructOpExpr(OpCall(QualifiedName(Some("Arithmetic"), operator), List(leftopd, nextAtom)), suf)
              case _ =>
                constructOpExpr(constructOp(op)(leftopd, nextAtom).setPos(leftopd),  suf)
 
@@ -345,7 +344,6 @@ def constructMulDivModTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
           case Node('LastLevelList ::= List('Operator,_), List(operator, lastLevelterm)) =>
             operator match {
               case Node('Operator ::= _, List(op)) =>
-                print(pTree)
                 constructOpExpr(constructFinalTerm(finalTerm), lastLevelList)
             }
           case Node(_, List()) =>
