@@ -30,7 +30,6 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
     def getOperatorPrecedence(df: N.QualifiedName): Int = {
       df match {
         case N.QualifiedName(Some(module), name) =>
-          print(module)
           table.getOperator(module, name) match {
             case Some((_, OpSig(_,_,_,precedence))) =>
               precedence
@@ -44,21 +43,22 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
     def transformExpr(expr: N.Expr)(implicit module:String): N.Expr = {
       expr match {
         case parent@N.OpCall(parentName, args) =>
-          println(parentName)
           if(args.size == 2){
-            val (leftNode, rightNode ) : (Option[(N.OpCall)], Option[N.OpCall]) = (isOp(args.head), isOp(args(1)))
+            val (leftNode, rightNode ) : (Option[N.OpCall], Option[N.OpCall]) = (isOp(args.head), isOp(args(1)))
             (leftNode, rightNode ) match {
               case (Some(left), None) =>
-                val recLeft@N.OpCall(leftOp, l::r::Nil) :N.Expr = transformExpr(left)
-                print(recLeft)
+
+                val recLeft@N.Call(leftOp, l::r::Nil) :N.Expr = transformExpr(left)
                 val (mod, name) = (leftOp.module, leftOp.name)
 
                 if(getOperatorPrecedence(leftOp) < getOperatorPrecedence(parentName)){
-                  N.OpCall(leftOp, l :: N.OpCall(parentName, r :: args(1) :: Nil ) :: Nil)
+                  N.Call(leftOp, l :: N.Call(parentName, r :: args(1) :: Nil ) :: Nil)
                 }else {
-                  N.OpCall(parentName, recLeft :: args(1) :: Nil)
+                  N.Call(parentName, recLeft :: args(1) :: Nil)
                 }
-              case _ => expr
+              case (None , None) =>
+                N.Call(parentName, args)
+
             }
           }else {
             expr

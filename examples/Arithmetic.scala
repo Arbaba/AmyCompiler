@@ -35,8 +35,8 @@ object Arithmetic {
     a
   }
   a ? b & c @ d;
-  a & b ? c;
-
+  a & b ? c
+/*
   Std.printInt(pow(0, 10));
   Std.printInt(pow(1, 5));
   Std.printInt(pow(2, 10));
@@ -45,4 +45,5 @@ object Arithmetic {
   Std.printInt(gcd(17, 99)); // 1
   Std.printInt(gcd(16, 46)); // 2
   Std.printInt(gcd(222, 888)) // 222
+*/
 }
