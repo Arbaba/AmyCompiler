@@ -46,24 +46,36 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
           if(args.size == 2){
             val (leftNode, rightNode ) : (Option[N.OpCall], Option[N.OpCall]) = (isOp(args.head), isOp(args(1)))
             (leftNode, rightNode ) match {
-              case (Some(left), None) =>
+              case (Some(left), right ) =>
 
-                val recLeft@N.Call(leftOp, l::r::Nil) :N.Expr = transformExpr(left)
-                val (mod, name) = (leftOp.module, leftOp.name)
+                val recLeft = transformExpr(left)
 
-                if(getOperatorPrecedence(leftOp) < getOperatorPrecedence(parentName)){
-                  N.Call(leftOp, l :: N.Call(parentName, r :: args(1) :: Nil ) :: Nil)
-                }else {
-                  N.Call(parentName, recLeft :: args(1) :: Nil)
+                recLeft match {
+                  case N.Call(leftOp, List(l,r)) =>
+                    val (mod, name) = (leftOp.module, leftOp.name)
+                    val parentRight = transformExpr(r)
+                    if(getOperatorPrecedence(leftOp) < getOperatorPrecedence(parentName)){
+                      N.Call(leftOp, l :: N.Call(parentName, r :: transformExpr(args(1)) :: Nil ) :: Nil)
+                    }else {
+                      N.Call(parentName, recLeft :: parentRight :: Nil)
+                    }
+                  case N.Call(unaryOp, List(arg)) =>
+                    if(getOperatorPrecedence(unaryOp) < getOperatorPrecedence(parentName)){
+                      N.Call(unaryOp, List(N.Call(parentName, List(arg, transformExpr(args(1))))))
+                    }else {
+                      N.Call(parentName, List(recLeft, transformExpr(args(1))))
+                    }
                 }
-              case (None , None) =>
-                N.Call(parentName, args)
-
+              case (None , _) =>
+                N.Call(parentName, args.map(transformExpr(_)))
             }
-          }else {
+          }else if(args.size == 1){
+                N.Call(parentName, args.map(transformExpr(_)))
+
+          } else {
             expr
           }
-        case N.Call(qname, args)      =>  N.Call(qname, args map transformExpr)
+        case N.Call(qname, args)      =>  N.Call(qname, args.map(transformExpr(_)))
         case N.Sequence(e1, e2)       =>  N.Sequence(transformExpr(e1), transformExpr(e2))
         case N.Let(df, value, body)   =>  N.Let(df, transformExpr(value), transformExpr(body))
         case N.Ite(cond, thenn, elze) =>  N.Ite(transformExpr(cond), transformExpr(thenn), transformExpr(elze))

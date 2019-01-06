@@ -389,7 +389,7 @@ def constructFinalTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
     case Node('FinalTerm ::=List('Operator, 'FinalTerm), List(operator, finalTerm))=>
       operator match {
         case Node('Operator ::=_ , List(Leaf(o@OPLIT(op)))) =>
-          OpCall(QualifiedName(None,op), constructFinalTerm(finalTerm) :: Nil).setPos(o)
+          OpCall(QualifiedName(Some("Arithmetic"),op), constructFinalTerm(finalTerm) :: Nil).setPos(o)
       }
   }
 }
