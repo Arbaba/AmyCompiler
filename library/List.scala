@@ -30,8 +30,16 @@ object L {
       case Cons(h, t) => Cons(h, concat(t, l2))
     }
   }
-
-/*  def headOption(l: List): O.Option = {
+/*
+	operator 20 def ++(l1: List, l2: List): List = {
+		concat(l1, l2)
+	}
+*/
+	//append operator scala collection-alike
+	def :+(l: List, x: Int): List = {
+		concat(l, Cons(x, Nil()))
+	}
+  def headOption(l: List): O.Option = {
     l match {
       case Cons(h, _) => O.Some(h)
       case Nil() => O.None()
@@ -119,7 +127,7 @@ object L {
             merge(mergeSort(l1), mergeSort(l2))
         }
     }
-  }*/
+  }
 
   def toString(l: List): String = { l match {
     case Nil() => "List()"
