@@ -9,12 +9,14 @@ import grammarcomp.parsing._
 import amyc.utils._
 import ast.NominalTreeModule._
 import Tokens._
+import amyc.analyzer.SymbolTable
 
 // The parser for Amy
 // Absorbs tokens from the Lexer and then uses grammarcomp to generate parse trees.
 // Defines two different grammars, a naive one which does not obey operator precedence (for demonstration purposes)
 // and an LL1 grammar that implements the true syntax of Amy
-object Parser extends Pipeline[Stream[Token], Program] {
+//object Parser extends Pipeline[(Stream[Token], SymbolTable), Program] {
+object Parser extends Pipeline[ Stream[Token], Program] {
 
   /* This grammar does not implement the correct syntax of Amy and is not LL1
    * It is given as an example
@@ -62,18 +64,19 @@ object Parser extends Pipeline[Stream[Token], Program] {
     'ModuleDefs ::= 'ModuleDef ~ 'ModuleDefs | epsilon(),
     'ModuleDef ::= OBJECT() ~ 'Id ~ LBRACE() ~ 'Definitions ~ 'OptExpr ~ RBRACE() ~ EOF(),
     'Definitions ::= 'Definition ~ 'Definitions | epsilon(),
-    'Definition ::= 'AbstractClassDef | 'CaseClassDef | 'FunDef,
+    'Definition ::= 'AbstractClassDef | 'CaseClassDef | 'FunDef |'OperatorDef,
     'AbstractClassDef ::= ABSTRACT() ~ CLASS() ~ 'Id,
     'CaseClassDef ::= CASE() ~ CLASS() ~ 'Id ~ LPAREN() ~ 'Params ~ RPAREN() ~ EXTENDS() ~ 'Id,
 
+    'FunDef ::=  DEF() ~ 'Id ~ LPAREN() ~ 'Params ~ RPAREN() ~ COLON() ~ 'Type ~ EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE() ,
+    'Operator ::= OPLITSENT,
 
-    'FunDef ::= 'Op ~ DEF() ~ 'Id ~ LPAREN() ~ 'Params ~ RPAREN() ~ COLON() ~ 'Type ~ EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE(),
-
-
+    'OperatorDef ::= OPERATOR() ~ INTLITSENT ~  DEF() ~ 'Operator ~ LPAREN() ~ 'Params ~ RPAREN() ~ COLON() ~ 'Type ~ EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE(),
     'Params ::= epsilon() | 'Param ~ 'ParamList,
     'ParamList ::= epsilon() | COMMA() ~ 'Param  ~ 'ParamList,
     'Param ::= 'Id ~ COLON() ~ 'Type,
-    'OptExpr ::= 'Expr | epsilon(),    'Op ::=  OPERATOR() | epsilon(),
+    'OptExpr ::= 'Expr | epsilon(),
+    'OptOp ::=  OPERATOR() | epsilon(),
 
     'ExprTail ::= SEMICOLON() ~ 'Expr | epsilon(),
     'Type ::= INT() | STRING() | BOOLEAN() | UNIT() | 'QName,
@@ -102,13 +105,15 @@ object Parser extends Pipeline[Stream[Token], Program] {
     'Plus_MinusTerm ::='MUL_DIV_MODTerm ~ 'Plus_MinusTermList,
 
     'MUL_DIV_MODTermList ::= 'MUL_DIV_MOD ~ 'MUL_DIV_MODTerm | epsilon(),
-    'MUL_DIV_MODTerm ::= 'LastLevel ~ 'MUL_DIV_MODTermList,
+    'MUL_DIV_MODTerm ::= 'LastLevelTerm ~ 'MUL_DIV_MODTermList,
 
-    'LastLevelList ::= 'Id ~ 'LastLevel | epsilon(),
-    'LastLevel ::= 'FinalTerm ~ 'LastLevelList,
+    'LastLevelList ::=  'Operator ~ 'LastLevelTerm | epsilon(),
+    'LastLevelTerm ::= 'FinalTerm ~ 'LastLevelList,
 
-     'FinalTerm ::= 'If | 'Error | 'Id ~ 'OptCall |'LiteralNoEmptyPar | 'EmptyParOrParExpr
-      | BANG() ~ 'FinalTerm | MINUS() ~ 'FinalTerm,
+
+
+    'FinalTerm ::= 'If | 'Error | 'Id ~ 'OptCall |'LiteralNoEmptyPar | 'EmptyParOrParExpr
+      | BANG() ~ 'FinalTerm | MINUS() ~ 'FinalTerm |'Operator ~ 'FinalTerm,
 
     'OptForQname ::= DOT() ~ 'Id | epsilon(),
     'OptForUnary ::= 'UNARY | epsilon(),
@@ -116,10 +121,11 @@ object Parser extends Pipeline[Stream[Token], Program] {
     'ParExpr ::=  LPAREN() ~ 'Expr ~ RPAREN(),
     'Val ::= 'Id,
     'Call ::= 'QName ~ LPAREN() ~ 'Args ~ RPAREN(),
+   // 'OperatorCall ::=  OPLITSENT ~ 'Expr,
     'Error ::= ERROR() ~ LPAREN() ~ 'Expr ~ RPAREN(),
     'If ::= IF() ~ LPAREN() ~ 'Expr ~ RPAREN() ~ LBRACE() ~ 'Expr ~ RBRACE() ~ ELSE() ~ LBRACE() ~ 'Expr ~ RBRACE(),
 
-    'UNARY ::= BANG() ~ 'FinalTerm | MINUS() ~ 'FinalTerm | 'Id ~ 'FinalTerm,
+    'UNARY ::=  'Operator ~ 'FinalTerm,
     //UNARY ::= 'Id ~ 'FinalTerm,
     'PLUS_MINUS ::= PLUS() | MINUS() | CONCAT(),
     'MUL_DIV_MOD ::= TIMES() | DIV() | MOD(),
@@ -128,6 +134,7 @@ object Parser extends Pipeline[Stream[Token], Program] {
     'Literal ::= TRUE() | FALSE() | LPAREN() ~ RPAREN() | INTLITSENT | STRINGLITSENT,
     'LiteralNoEmptyPar ::=  TRUE() | FALSE() | INTLITSENT | STRINGLITSENT,
     'EmptyParOrParExpr ::= LPAREN() ~ 'OptExpr  ~ RPAREN(),
+
 
     'Cases ::= 'Case ~ 'CasesTail,
     'CasesTail ::=  'Cases | epsilon(),
@@ -147,6 +154,7 @@ object Parser extends Pipeline[Stream[Token], Program] {
     'Id ::= IDSENT
   ))
 
+  //def run(ctx: Context)(tokens: Stream[Token], table:SymbolTable): Program = {
   def run(ctx: Context)(tokens: Stream[Token]): Program = {
     // TODO: Switch to LL1 when you are ready
     val (grammar, constructor) = (amyGrammarLL1, new ASTConstructorLL1)

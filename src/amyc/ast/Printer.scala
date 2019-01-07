@@ -48,8 +48,12 @@ trait Printer {
 
       case ParamDef(name, tpe) =>
         name <:> ": " <:> rec(tpe)
-
-      /* Expressions */
+      case OpDef(name, params, retType, body, precedence) =>
+        Stacked(
+          s"operator $precedence def " <:> name <:> "(" <:> Lined(params map (rec(_)), ", ") <:> "): " <:> rec(retType) <:> " = {",
+          Indented(rec(body, false)),
+          "}"
+        )      /* Expressions */
       case Variable(name) =>
         name
       case IntLiteral(value) =>
@@ -88,6 +92,9 @@ trait Printer {
         "-(" <:> rec(e) <:> ")"
       case Call(name, args) =>
         name <:> "(" <:> Lined(args map (rec(_)), ", ") <:> ")"
+      case OpCall(name, args) =>
+        "OpCall" <:> name <:> "(" <:> Lined(args map (rec(_)), ", ") <:> ")"
+
       case Sequence(lhs, rhs) =>
         val main = Stacked(
           rec(lhs, false) <:> ";",

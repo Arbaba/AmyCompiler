@@ -7,6 +7,7 @@ import ast.NominalTreeModule._
 import Tokens._
 import amyc.ast.NominalTreeModule
 import ast.NominalTreeModule._
+import amyc.analyzer.SymbolTable
 
 // Implements the translation from parse trees to ASTs for the LL1 grammar,
 // that is, this should correspond to Parser.amyGrammarLL1.
@@ -35,11 +36,19 @@ class ASTConstructorLL1 extends ASTConstructor {
        leftopd
      case Node(sym ::= _, List(op, rightNode))
        //if Set('OrExpr, 'AndExpr, 'EqExpr, 'CompExpr, 'AddExpr, 'MultExpr) contains sym =>
-       if Set('ExprTerm, 'OrTermList, 'AndTermList, 'EqTermList, 'LessTermList, 'Plus_MinusTermList, 'MUL_DIV_MODTermList) contains sym =>
+       if Set('ExprTerm, 'OrTermList, 'AndTermList, 'EqTermList, 'LessTermList, 'Plus_MinusTermList, 'MUL_DIV_MODTermList, 'LastLevelList) contains sym =>
      rightNode match {
          case Node(_, List(nextOpd, suf)) => // 'Expr? ::= Expr? ~ 'OpExpr,
            val nextAtom = findAndUseExpr(nextOpd)
-           constructOpExpr(constructOp(op)(leftopd, nextAtom).setPos(leftopd),  suf)
+           print(op)
+
+           op match {
+             case Node('Operator ::=_, List(Leaf(OPLIT(operator)))) =>
+               constructOpExpr(OpCall(QualifiedName(None, operator), List(leftopd, nextAtom)), suf)
+             case _ =>
+               constructOpExpr(constructOp(op)(leftopd, nextAtom).setPos(leftopd),  suf)
+
+           }
             // captures left associativity
          case Node(_, List()) =>
          leftopd
@@ -69,6 +78,7 @@ class ASTConstructorLL1 extends ASTConstructor {
         Div
       case Node('MUL_DIV_MODTerm ::=_, List(Leaf(MOD())) )=>
         Mod
+
       case Leaf(op) => tokenToExpr(op)
     }
   }
@@ -97,6 +107,30 @@ class ASTConstructorLL1 extends ASTConstructor {
        None
    }
  }
+
+
+  override def constructDef0(pTree: NodeOrLeaf[Token]): ClassOrFunDef = {
+    pTree match {
+      case Node('OperatorDef ::=_, List(Leaf(operator), Leaf(it@INTLIT(precedence)),  Leaf(df), name, _, params, _, _, retType, _, _, body, _)) =>
+        OpDef(constructOperatorName(name)._1,
+          constructList(params, constructParam, hasComma = true),
+          constructType(retType),
+          constructExpr(body),
+          precedence
+        ).setPos(operator)
+      case _ =>
+        super.constructDef0(pTree)
+    }
+  }
+
+
+  def constructOperatorName(ptree: NodeOrLeaf[Token]): (String, Positioned) = {
+    ptree match {
+      case Node('Operator ::= _, List(Leaf(id@OPLIT(name)))) =>
+        (name, id)
+    }
+  }
+
 
 
   override def constructCase(pTree: NodeOrLeaf[Token]): MatchCase = {
@@ -190,6 +224,7 @@ class ASTConstructorLL1 extends ASTConstructor {
           case 'Plus_MinusTerm => constructPlusMinusTerm(ptree)
           case 'MUL_DIV_MODTerm => constructMulDivModTerm(ptree)
           case 'FinalTerm => constructFinalTerm(ptree)
+          case 'LastLevelTerm => constructLastLevelTerm(ptree)
         }
     }
   }
@@ -289,18 +324,35 @@ class ASTConstructorLL1 extends ASTConstructor {
 
 def constructMulDivModTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
   ptree match  {
-    case Node('MUL_DIV_MODTerm  ::= List('FinalTerm, 'MUL_DIV_MODTermList), List(finalterm, muldivmodtermlist)) =>
+    case Node('MUL_DIV_MODTerm  ::= List('LastLevelTerm, 'MUL_DIV_MODTermList), List(lastLevel, muldivmodtermlist)) =>
       muldivmodtermlist match {
         case Node('MUL_DIV_MODTermList::= List('MUL_DIV_MOD ,_), List(mdv, muldivmodterm)) =>
           mdv match {
             case Node('MUL_DIV_MOD ::= _, List(op)) =>
-              constructOpExpr(constructFinalTerm(finalterm),muldivmodtermlist )
+              constructOpExpr(constructLastLevelTerm(lastLevel),muldivmodtermlist )
           }
         case Node(_, List()) =>
-          constructFinalTerm(finalterm)
+          constructLastLevelTerm(lastLevel)
       }
   }
 }
+
+
+  def constructLastLevelTerm(pTree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
+    pTree match {
+      case Node('LastLevelTerm ::= List('FinalTerm, 'LastLevelList),List(finalTerm, lastLevelList)) =>
+        lastLevelList match {
+          case Node('LastLevelList ::= List('Operator,_), List(operator, lastLevelterm)) =>
+            operator match {
+              case Node('Operator ::= _, List(op)) =>
+                print(pTree)
+                constructOpExpr(constructFinalTerm(finalTerm), lastLevelList)
+            }
+          case Node(_, List()) =>
+            constructFinalTerm(finalTerm)
+        }
+    }
+  }
 // Need to add  Minus
 def constructFinalTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
  // println(ptree)
@@ -336,7 +388,11 @@ def constructFinalTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
      Not(constructFinalTerm(finalTerm)).setPos(justForPos)
     case Node('FinalTerm ::= (MINUS() :: 'FinalTerm ::_), List(Leaf(justForPos), finalTerm)) =>
       Neg(constructFinalTerm(finalTerm)).setPos(justForPos)
-
+    case Node('FinalTerm ::=List('Operator, 'FinalTerm), List(operator, finalTerm))=>
+      operator match {
+        case Node('Operator ::=_ , List(Leaf(o@OPLIT(op)))) =>
+          OpCall(QualifiedName(None,op), constructFinalTerm(finalTerm) :: Nil).setPos(o)
+      }
   }
 }
 
@@ -433,7 +489,6 @@ def constructFinalTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
             (QualifiedName(None, name), pos)
         }
     }
-
   }
 
   def constructExprList(pTree: NodeOrLeaf[Token]): List[NominalTreeModule.Expr] = {

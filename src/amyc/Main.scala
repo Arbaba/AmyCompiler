@@ -4,6 +4,7 @@ import utils._
 import ast._
 import parsing._
 import analyzer._
+import parsing.ASTPrecedenceCorrector
 import codegen._
 
 import java.io.File
@@ -18,7 +19,10 @@ object Main extends MainHelpers {
     val pipeline =
       Lexer andThen
       Parser andThen
-      NameAnalyzer// andThen
+      treePrinterN("Tree after basic parser")
+     // PreAnalyzer andThen
+     // ASTPrecedenceCorrector //andThen
+      //NameAnalyzer// andThen
       //TypeChecker// andThen
       //CodeGen andThen
       //CodePrinter
