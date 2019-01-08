@@ -23,45 +23,7 @@ object Arithmetic {
     }
   }
 
-  operator 1 def  & (a: Int, b : Int): Int = {
-    a
-  }
-  operator 2 def ? (a: Int, b: Int): Int = {
-    a ?@ a
-  }
-<<<<<<< HEAD
-  operator 0 def ~(a :Int): Int = {
-    a
-  }
 
-
-  a & b ? c;
-  ~a & ~b
-
-=======
-
-
-  operator 0 def @(a :Int, b :Int): Int = {
-    a
-  }
-
-
-  operator 3 def ~(a :Int, b :Int): Int = {
-    a
-  }
-
-/*
-  ~a ? ~b & ~c @ ~d;
-  a & b ? c;
-  ~a & ~b;
-  a ? b & c @ d;
-*/
-  a + b * c <= 20;
-  f(a1,a2) @ b & d % f - g + 6 *4 match {
-    case 5 => 2
-    case _ => 1
-  }
->>>>>>> 63102d191fb9ed0817be9439c2e15fb49b847b30
 /*
   Std.printInt(pow(0, 10));
   Std.printInt(pow(1, 5));
