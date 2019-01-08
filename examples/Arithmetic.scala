@@ -26,7 +26,7 @@ object Arithmetic {
   operator 1 def  & (a: Int, b : Int): Int = {
     a
   }
-  operator 2 def ? (a: Int): Int = {
+  operator 2 def ? (a: Int, b: Int): Int = {
     a ?@ a
   }
 
@@ -47,7 +47,10 @@ object Arithmetic {
   a ? b & c @ d;
 */
   a + b * c <= 20;
-  f(a1,a2) @ b & d % f - g + 6 *4
+  f(a1,a2) @ b & d % f - g + 6 *4 match {
+    case 5 => 2
+    case _ => 1
+  }
 /*
   Std.printInt(pow(0, 10));
   Std.printInt(pow(1, 5));

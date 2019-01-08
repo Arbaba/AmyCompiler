@@ -44,25 +44,15 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
                     }else {
                       N.Call(parentName, recLeft :: parentRight :: Nil)
                     }
-                  case N.Call(unaryOp, List(arg)) =>
 
-                    if(getOperatorPrecedence(unaryOp) < getOperatorPrecedence(parentName)){
-
-                      N.Call(unaryOp, List(N.Call(parentName, List(arg, parentRight))))
-                    }else {
-                      N.Call(parentName, List(recLeft, parentRight))
-                    }
 
                 }
 
               case (None , _) =>
                 N.Call(parentName, args.map(transformExpr(_)))
             }
-          }else if(args.size == 1){
-                N.Call(parentName, args.map(transformExpr(_)))
-
           } else {
-            fatal(s"Unary operator $parentName cannot have $args.size arguments", expr.position)
+            fatal(s"Custom binary operator $parentName cannot have $args.size arguments", expr.position)
           }
         case N.Call(qname, args)      =>  N.Call(qname, args.map(transformExpr(_)))
         case N.Sequence(e1, e2)       =>  N.Sequence(transformExpr(e1), transformExpr(e2))
