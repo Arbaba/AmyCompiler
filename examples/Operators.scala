@@ -11,6 +11,15 @@ object Operators {
 			2 * x << y - 1
 		}
 	}
+	operator 20 def ^(x: Boolean, y: Boolean): Boolean = {
+		if(x == true) {
+			!y
+		}
+		else {
+			y
+		}
+	}
+
 	operator 50 def >>(x: Int, y: Int): Int = {
 		if(y == 0) {
 			x
@@ -20,13 +29,5 @@ object Operators {
 		}
 	}
 
-	operator 20 def ^(x: Boolean, y: Boolean): Boolean = {
-		if(x == true) {
-			!y
-		}
-		else {
-			y
-		}
-	}
 
 }

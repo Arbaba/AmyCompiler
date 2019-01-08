@@ -29,23 +29,14 @@ object Arithmetic {
   operator 2 def ? (a: Int): Int = {
     -!a
   }
-
-
-  operator 3 def @(a :Int, b :Int): Int = {
-    a
-  }
-
   operator 0 def ~(a :Int): Int = {
     a
   }
 
 
-  ~a ? ~b & ~c @ ~d;
   a & b ? c;
-  ~a & ~b;
-  a ? b & c @ d;
+  ~a & ~b
 
-  a @ b & c
 /*
   Std.printInt(pow(0, 10));
   Std.printInt(pow(1, 5));

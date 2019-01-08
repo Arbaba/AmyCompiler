@@ -10,7 +10,7 @@ object Matrix {
 //numpy-like dot product associative, non-commutative operator
 	operator 80 def @(w: Matrix2x2, x: Matrix): Matrix = {
 		w match {
-			case Matrix2x2(a, b, c, d) => {
+			case Matrix2x2(a, b, c, d) =>
 				x match {
 					case Vector2(x, y) => Vector2(x*a + y*b, x*c + y*d)
 					case Matrix2x2(r, s, t, u) => Matrix2x2(
@@ -18,10 +18,8 @@ object Matrix {
 						c*r + d*t, c*s + d*u
 					)
 				}
-			}
 		}
 	}
-
 	abstract class Tuple
 	case class Pair(a: Int, b: Int) extends Tuple
 	operator 99 def ::(a: Int, b: Int): Pair = {//lisp-like cons
@@ -32,5 +30,5 @@ object Matrix {
 	val swap: Matrix2x2 = Matrix2x2(0, 1, 1, 0);
 	val W: Matrix2x2 = Matrix2x2(53, 36, 24, 34);
 	val x: Vector2 = Vector2(5, 3);
-	I @ W @ x	
+	W @ (I @ W)
 }
