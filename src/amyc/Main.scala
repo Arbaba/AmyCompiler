@@ -20,14 +20,14 @@ object Main extends MainHelpers {
       Lexer andThen
       Parser andThen
      PreAnalyzer andThen
-      //ASTPrecedenceCorrector andThen
+      ASTPrecedenceCorrector andThen
       treePrinterN("Tree after correction")
       //NameAnalyzer// andThen
       //TypeChecker// andThen
       //CodeGen andThen
       //CodePrinter
-
-    val files = ctx.files.map(new File(_))
+    val operators = new File("library\\Operators.scala")
+    val files = operators :: ctx.files.map(new File(_))
 
     try {
       if (files.isEmpty) {
