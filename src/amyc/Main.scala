@@ -19,8 +19,8 @@ object Main extends MainHelpers {
     val pipeline =
       Lexer andThen
       Parser andThen
-      PreAnalyzer andThen
-      ASTPrecedenceCorrector andThen
+     PreAnalyzer andThen
+      //ASTPrecedenceCorrector andThen
       treePrinterN("Tree after correction")
       //NameAnalyzer// andThen
       //TypeChecker// andThen

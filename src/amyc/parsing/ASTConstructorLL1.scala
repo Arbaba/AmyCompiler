@@ -1,14 +1,13 @@
 package amyc
 package parsing
 
-import grammarcomp.parsing._
 import utils.Positioned
 import ast.NominalTreeModule._
 import Tokens._
-import amyc.ast.NominalTreeModule
+import amyc.ast.{NominalTreeModule, TreeModule}
 import ast.NominalTreeModule._
 import amyc.analyzer.SymbolTable
-
+import grammarcomp.parsing._
 // Implements the translation from parse trees to ASTs for the LL1 grammar,
 // that is, this should correspond to Parser.amyGrammarLL1.
 // We extend the plain ASTConstructor as some things will be the same -- you should
@@ -42,9 +41,12 @@ class ASTConstructorLL1 extends ASTConstructor {
            val nextAtom = findAndUseExpr(nextOpd)
 
            op match {
-             case Node('Operator ::=_, List(Leaf(OPLIT(operator)))) =>
+             case Node('OpDefId ::=_, List(Leaf(OPLIT(operator)))) =>
                constructOpExpr(OpCall(QualifiedName(Some("Arithmetic"), operator), List(leftopd, nextAtom)), suf)
+             case Node('OpDefId ::=_ , List(Leaf(operator: Token))) =>
+               constructOpExpr(OpCall(QualifiedName(Some("Arithmetic"), binopToString(operator)), List(leftopd, nextAtom)), suf)
              case _ =>
+               println(op)
                constructOpExpr(constructOp(op)(leftopd, nextAtom).setPos(leftopd),  suf)
 
            }
@@ -107,30 +109,64 @@ class ASTConstructorLL1 extends ASTConstructor {
    }
  }
 
-
+  val defaultOpTypes : Map[Token, Type] = Map(PLUS() -> IntType, MINUS() -> IntType, TIMES() -> IntType, MOD()-> IntType, DIV() -> IntType,
+                          LESSTHAN() -> BooleanType, LESSEQUALS()-> BooleanType, AND()-> BooleanType, OR()-> BooleanType, EQUALS() -> BooleanType,
+                          CONCAT() -> StringType)
+ 
   override def constructDef0(pTree: NodeOrLeaf[Token]): ClassOrFunDef = {
+
     pTree match {
-      case Node('OperatorDef ::=_, List(Leaf(operator), Leaf(it@INTLIT(precedence)),  Leaf(df), name, _, params, _, _, retType, _, _, body, _)) =>
-        OpDef(constructOperatorName(name)._1,
-          constructList(params, constructParam, hasComma = true),
-          constructType(retType),
-          constructExpr(body),
-          precedence
-        ).setPos(operator)
+      case Node('OperatorDef ::=_, List(Leaf(operator), Leaf(it@INTLIT(precedence)),  Leaf(df), name,_,params,_,_,retType, optionalBody)) =>
+        optionalBody match {
+          case Node('OptionalBody ::=_ , List(_,_,body,_)) =>
+            OpDef(operatorData(name)._1,
+              constructList(params, constructParam, hasComma = true),
+              constructType(retType),
+              constructExpr(body),
+              precedence
+            ).setPos(operator)
+
+          case Node('OptionalBody::=_, List()) =>
+            val (n, _, Some(typee)) =operatorData(name)
+            OpDef(n,
+              constructList(params, constructParam, hasComma = true),
+              TypeTree(typee),
+              UnitLiteral(),
+              precedence
+            ).setPos(operator)
+        }
+
       case _ =>
         super.constructDef0(pTree)
     }
   }
 
 
-  def constructOperatorName(ptree: NodeOrLeaf[Token]): (String, Positioned) = {
+  def operatorData(ptree: NodeOrLeaf[Token]): (String, Positioned, Option[Type]) = {
+
     ptree match {
+      case Node('OpDefId ::= _, List(Leaf(id@OPLIT(name)))) =>
+        (name, id, None)
       case Node('Operator ::= _, List(Leaf(id@OPLIT(name)))) =>
-        (name, id)
+        (name, id, None)
+      case Node('OpDefId ::=_ , List(Leaf(op))) =>
+        op match {
+          case pos@PLUS() =>      ("+", pos, Some(IntType))
+          case pos@MINUS() =>     ("-", pos, Some(IntType))
+          case pos@TIMES() =>     ("*", pos, Some(IntType))
+          case pos@MOD()=>        ("%", pos, Some(IntType))
+          case pos@DIV() =>       ("/", pos, Some(IntType))
+          case pos@LESSTHAN() =>  ("<", pos, Some(BooleanType))
+          case pos@LESSEQUALS()=> ("<=", pos, Some(BooleanType))
+          case pos@AND()=>        ("&&", pos, Some(BooleanType))
+          case pos@OR()=>         ("||", pos, Some(BooleanType))
+          case pos@EQUALS() =>    ("==", pos, Some(BooleanType))
+          case pos@CONCAT() =>    ("++", pos, Some(StringType))
+          case _ => throw new IllegalArgumentException(s"Invalid Id for default operator")
+        }
+
     }
   }
-
-
 
   override def constructCase(pTree: NodeOrLeaf[Token]): MatchCase = {
     pTree match {
@@ -230,12 +266,12 @@ class ASTConstructorLL1 extends ASTConstructor {
 
    def constructExprTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
     ptree match {
-      case Node('ExprTerm ::= List('OrTerm, 'OptMatch), List(scrut, optMatch)) =>
+      case Node('ExprTerm ::= List('LastLevelTerm, 'OptMatch), List(scrut, optMatch)) =>
         optMatch match {
           case Node('OptMatch ::= List(MATCH(), LBRACE(), 'Cases ,RBRACE()), List(Leaf(matchh),_, cases,_)) =>
-            Match(constructOrTerm(scrut), constructCases(cases))//construct cases
+            Match(constructLastLevelTerm(scrut), constructCases(cases))//construct cases
           case Node('OptMatch ::= _, List()) =>
-            constructOrTerm(scrut)
+            constructLastLevelTerm(scrut)
         }
     }
   }
@@ -341,9 +377,9 @@ def constructMulDivModTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
     pTree match {
       case Node('LastLevelTerm ::= List('FinalTerm, 'LastLevelList),List(finalTerm, lastLevelList)) =>
         lastLevelList match {
-          case Node('LastLevelList ::= List('Operator,_), List(operator, lastLevelterm)) =>
+          case Node('LastLevelList ::= List('OpDefId,_), List(operator, lastLevelterm)) =>
             operator match {
-              case Node('Operator ::= _, List(op)) =>
+              case Node('OpDefId ::= _, List(op)) =>
                 constructOpExpr(constructFinalTerm(finalTerm), lastLevelList)
             }
           case Node(_, List()) =>

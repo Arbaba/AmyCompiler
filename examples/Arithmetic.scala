@@ -27,25 +27,27 @@ object Arithmetic {
     a
   }
   operator 2 def ? (a: Int): Int = {
-    -!a
+    a ?@ a
   }
 
 
-  operator 3 def @(a :Int, b :Int): Int = {
-    a
-  }
-
-  operator 0 def ~(a :Int): Int = {
+  operator 0 def @(a :Int, b :Int): Int = {
     a
   }
 
 
+  operator 3 def ~(a :Int, b :Int): Int = {
+    a
+  }
+
+  operator 200 def +(a: Int, b: Int): Int
+/*
   ~a ? ~b & ~c @ ~d;
   a & b ? c;
   ~a & ~b;
   a ? b & c @ d;
-
-  a @ b & c
+*/
+  f(a1,a2) @ b & d % f - g + 6 *4
 /*
   Std.printInt(pow(0, 10));
   Std.printInt(pow(1, 5));
@@ -56,4 +58,6 @@ object Arithmetic {
   Std.printInt(gcd(16, 46)); // 2
   Std.printInt(gcd(222, 888)) // 222
 */
+
+
 }

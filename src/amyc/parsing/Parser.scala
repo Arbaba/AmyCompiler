@@ -69,9 +69,11 @@ object Parser extends Pipeline[ Stream[Token], Program] {
     'CaseClassDef ::= CASE() ~ CLASS() ~ 'Id ~ LPAREN() ~ 'Params ~ RPAREN() ~ EXTENDS() ~ 'Id,
 
     'FunDef ::=  DEF() ~ 'Id ~ LPAREN() ~ 'Params ~ RPAREN() ~ COLON() ~ 'Type ~ EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE() ,
+    'OperatorDef ::= OPERATOR() ~ INTLITSENT ~  DEF() ~ 'OpDefId ~ LPAREN() ~ 'Params ~ RPAREN() ~ COLON() ~ 'Type  ~ 'OptionalBody ,
     'Operator ::= OPLITSENT,
+    'OpDefId::= OPLITSENT |  PLUS() | MINUS() | DIV() | TIMES()  | OR() | AND() | LESSTHAN() | MOD() | LESSEQUALS() | CONCAT() | EQUALS(),
+    'OptionalBody ::=    EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE() | epsilon(),
 
-    'OperatorDef ::= OPERATOR() ~ INTLITSENT ~  DEF() ~ 'Operator ~ LPAREN() ~ 'Params ~ RPAREN() ~ COLON() ~ 'Type ~ EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE(),
     'Params ::= epsilon() | 'Param ~ 'ParamList,
     'ParamList ::= epsilon() | COMMA() ~ 'Param  ~ 'ParamList,
     'Param ::= 'Id ~ COLON() ~ 'Type,
@@ -82,14 +84,12 @@ object Parser extends Pipeline[ Stream[Token], Program] {
     'Type ::= INT() | STRING() | BOOLEAN() | UNIT() | 'QName,
     'QName ::= 'Id ~ 'QNames,
     'QNames ::= DOT() ~ 'Id | epsilon(),
-    'Expr ::= VAL() ~ 'Param ~ EQSIGN() ~ 'ExprTerm ~ SEMICOLON() ~  'Expr
-      |'ExprTerm ~ 'ExprTail,
+    'Expr ::= VAL() ~ 'Param ~ EQSIGN() ~ 'ExprTerm ~ SEMICOLON() ~  'Expr  |'ExprTerm ~ 'ExprTail,
 
     //'ExprTerm ::= 'OptMatch ~ 'OrTerm ,
-
-    'ExprTerm ::= 'OrTerm ~ 'OptMatch,
+    'ExprTerm ::= 'LastLevelTerm ~ 'OptMatch,
     'OptMatch ::= MATCH() ~ LBRACE() ~ 'Cases ~ RBRACE()| epsilon(),
-    'OrTermList ::=  OR() ~  'OrTerm  | epsilon(),
+    /*'OrTermList ::=  OR() ~  'OrTerm  | epsilon(),
     'OrTerm ::= 'AndTerm ~ 'OrTermList,
 
     'AndTermList ::= AND() ~ 'AndTerm | epsilon(),
@@ -106,14 +106,14 @@ object Parser extends Pipeline[ Stream[Token], Program] {
 
     'MUL_DIV_MODTermList ::= 'MUL_DIV_MOD ~ 'MUL_DIV_MODTerm | epsilon(),
     'MUL_DIV_MODTerm ::= 'LastLevelTerm ~ 'MUL_DIV_MODTermList,
-
-    'LastLevelList ::=  'Operator ~ 'LastLevelTerm | epsilon(),
+    */
+    'LastLevelList ::=  'OpDefId ~ 'LastLevelTerm | epsilon(),
     'LastLevelTerm ::= 'FinalTerm ~ 'LastLevelList,
 
 
 
     'FinalTerm ::= 'If | 'Error | 'Id ~ 'OptCall |'LiteralNoEmptyPar | 'EmptyParOrParExpr
-      | BANG() ~ 'FinalTerm | MINUS() ~ 'FinalTerm |'Operator ~ 'FinalTerm,
+      | BANG() ~ 'FinalTerm | MINUS() ~ 'FinalTerm ,
 
     'OptForQname ::= DOT() ~ 'Id | epsilon(),
     'OptForUnary ::= 'UNARY | epsilon(),
