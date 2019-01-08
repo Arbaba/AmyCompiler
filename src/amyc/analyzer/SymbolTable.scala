@@ -66,7 +66,7 @@ class SymbolTable {
     typesToConstructors += parent -> (typesToConstructors.getOrElse(parent, Nil) :+ s)
     s
   }
-  def getConstructor(owner: String, name: String): Option[(Identifier, ConstrSig)] = {
+  def getConstructor(name: String): Option[(Identifier, ConstrSig)] = {
     for {
       sym <- defsByName.get(owner, name)
       sig <- constructors.get(sym)
@@ -89,16 +89,16 @@ class SymbolTable {
     } yield (sym, sig)
   }
   def getFunction(symbol: Identifier) = functions.get(symbol)
-	def addOperator(owner: String, name: String, argTypes: List[Type], retType: Type, precedence: Int) = {
+	def addOperator(name: String, argTypes: List[Type], retType: Type, precedence: Int) = {
     val s = Identifier.fresh(name)
-    defsByName += (owner, name) -> s
+    defsByName += ("ops*", name) -> s
     operators += s -> OpSig(argTypes, retType, getModule(owner).getOrElse(sys.error(s"Module $owner not found!")), precedence)
     s
   }
-	def getOperator(symbol: Identifier) = operators.get(symbol)
+	//def getOperator(symbol: Identifier) = operators.get(symbol)
 	def getOperator(owner: String, name: String): Option[(Identifier, OpSig)] = {
     for {
-      sym <- defsByName.get(owner, name)
+      sym <- defsByName.get("", name)
       sig <- operators.get(sym)
     } yield (sym, sig)
   }
