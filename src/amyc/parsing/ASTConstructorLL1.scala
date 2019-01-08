@@ -59,46 +59,8 @@ class ASTConstructorLL1 extends ASTConstructor {
 
  }
 
-  override def constructOp(ptree: NodeOrLeaf[Token]): (Expr, Expr) => Expr = {
-    ptree match {
-      case Node(_, List(Leaf(t))) =>
-        tokenToExpr(t)
-      case Node('Less ::=_, List(Leaf(LESSTHAN())))=>
-        LessThan
-      case Node('Less ::=_, List(Leaf(LESSEQUALS())))=>
-        LessEquals
-      case Node ('PLUS_MINUS ::=_ , List(Leaf(PLUS()))) =>
-        Plus
-      case Node ('PLUS_MINUS ::=_ , List(Leaf(MINUS()))) =>
-        Minus
-      case Node ('PLUS_MINUS ::=_ , List(Leaf(CONCAT())) )=>
-        Concat
-      case Node('MUL_DIV_MODTerm ::=_, List(Leaf(TIMES()))) =>
-        Times
-      case Node ('MUL_DIV_MODTerm ::=_ , List(Leaf(DIV()))) =>
-        Div
-      case Node('MUL_DIV_MODTerm ::=_, List(Leaf(MOD())) )=>
-        Mod
-
-      case Leaf(op) => tokenToExpr(op)
-    }
-  }
 
 
-   /*override def constructQname(pTree: NodeOrLeaf[Token]): (QualifiedName, Positioned) ={
-     pTree match {
-       case Node('QName ::= _, List(id, qnames)) =>
-         val (name, pos) = constructName(id)
-         val tail = constructQnames(qnames)
-         tail match {
-           case Some((string, position)) =>
-             (QualifiedName(Some(name), string), pos)
-           case None =>
-             (QualifiedName(None, name), pos)
-         }
-     }
-
-   }*/
 
  def constructQnames(pTree: NodeOrLeaf[Token]): Option[(String, Positioned)] = {
    pTree match {
@@ -253,12 +215,12 @@ class ASTConstructorLL1 extends ASTConstructor {
         exprtype match {
           case 'Expr => constructExpr(ptree)
           case 'ExprTerm => constructExprTerm(ptree)
-          case 'OrTerm => constructOrTerm(ptree)
+          /*case 'OrTerm => constructOrTerm(ptree)
           case 'AndTerm => constructAndTerm(ptree)
           case 'EqTerm => constructEqTerm(ptree)
           case 'LessTerm => constructLessTerm(ptree)
           case 'Plus_MinusTerm => constructPlusMinusTerm(ptree)
-          case 'MUL_DIV_MODTerm => constructMulDivModTerm(ptree)
+          case 'MUL_DIV_MODTerm => constructMulDivModTerm(ptree)*/
           case 'FinalTerm => constructFinalTerm(ptree)
           case 'LastLevelTerm => constructLastLevelTerm(ptree)
         }
@@ -290,89 +252,6 @@ class ASTConstructorLL1 extends ASTConstructor {
         super.constructCase(casee) :: constructCasesTail(tail)
     }
   }
-  def constructOrTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
-    ptree match  {
-      case Node('OrTerm ::=_, List(andterm, ortermlist)) =>
-        ortermlist match {
-          case Node('OrTermList ::= (OR() ::_), List(or,orterm)) =>
-            constructOpExpr(constructAndTerm(andterm), ortermlist)
-          case Node(_, List()) =>
-            constructAndTerm(andterm)
-        }
-    }
-  }
-
-  def constructAndTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
-    ptree match  {
-      case Node('AndTerm ::=_, List(eqterm, andtermlist)) =>
-        andtermlist match {
-          case Node('AndTermList ::= (AND() :: _), List(and,andterm)) =>
-            //constructOpExpr(and)(eqterm, andterm)
-            constructOpExpr(constructEqTerm(eqterm), andtermlist)
-          case Node(_, List()) =>
-            constructEqTerm(eqterm)
-        }
-    }
-  }
-
-  def constructEqTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
-    ptree match  {
-      case Node('EqTerm ::=_, List(lessterm, eqtermlist)) =>
-        eqtermlist match {
-          case Node('EqTermList ::= List(EQUALS(),'EqTerm), List(eq,eqterm)) =>
-            constructOpExpr(constructLessTerm(lessterm), eqtermlist)
-          case Node(_, List()) =>
-            constructLessTerm(lessterm)
-        }
-    }
-  }
-
-  def constructLessTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
-    ptree match  {
-      case Node('LessTerm ::=_, List(plusminusterm, lesstermlist)) =>
-        lesstermlist match {
-          case Node('LessTermList ::= List('LESS ,_), List(less,lessterm)) =>
-            less match {
-              case Node('LESS ::= _, List(ltorless)) =>
-                constructOpExpr(constructPlusMinusTerm(plusminusterm), lesstermlist)
-            }
-          case Node(_, List()) =>
-            constructPlusMinusTerm(plusminusterm)
-        }
-    }
-  }
-
-  def constructPlusMinusTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
-    ptree match  {
-      case Node('Plus_MinusTerm ::= List('MUL_DIV_MODTerm,'Plus_MinusTermList), List(muldivmodterm, plusminustermlist)) =>
-        plusminustermlist match {
-          case Node('Plus_MinusTermList ::= List('PLUS_MINUS,_), List(plusminus,plusminusterm)) =>
-            plusminus match {
-              case Node('PLUS_MINUS ::= _, List(op)) =>
-                constructOpExpr(constructMulDivModTerm(muldivmodterm), plusminustermlist)
-            }
-          case Node(_, List()) =>
-            constructMulDivModTerm(muldivmodterm)
-        }
-    }
-  }
-
-
-def constructMulDivModTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
-  ptree match  {
-    case Node('MUL_DIV_MODTerm  ::= List('LastLevelTerm, 'MUL_DIV_MODTermList), List(lastLevel, muldivmodtermlist)) =>
-      muldivmodtermlist match {
-        case Node('MUL_DIV_MODTermList::= List('MUL_DIV_MOD ,_), List(mdv, muldivmodterm)) =>
-          mdv match {
-            case Node('MUL_DIV_MOD ::= _, List(op)) =>
-              constructOpExpr(constructLastLevelTerm(lastLevel),muldivmodtermlist )
-          }
-        case Node(_, List()) =>
-          constructLastLevelTerm(lastLevel)
-      }
-  }
-}
-
 
   def constructLastLevelTerm(pTree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
     pTree match {

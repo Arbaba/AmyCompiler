@@ -89,24 +89,7 @@ object Parser extends Pipeline[ Stream[Token], Program] {
     //'ExprTerm ::= 'OptMatch ~ 'OrTerm ,
     'ExprTerm ::= 'LastLevelTerm ~ 'OptMatch,
     'OptMatch ::= MATCH() ~ LBRACE() ~ 'Cases ~ RBRACE()| epsilon(),
-    /*'OrTermList ::=  OR() ~  'OrTerm  | epsilon(),
-    'OrTerm ::= 'AndTerm ~ 'OrTermList,
 
-    'AndTermList ::= AND() ~ 'AndTerm | epsilon(),
-    'AndTerm ::=  'EqTerm ~ 'AndTermList,
-
-    'EqTermList ::= EQUALS() ~'EqTerm | epsilon(),
-    'EqTerm ::= 'LessTerm ~ 'EqTermList,
-
-    'LessTermList ::= 'LESS ~ 'LessTerm| epsilon(),
-    'LessTerm ::= 'Plus_MinusTerm ~ 'LessTermList,
-
-    'Plus_MinusTermList ::= 'PLUS_MINUS ~ 'Plus_MinusTerm | epsilon(),
-    'Plus_MinusTerm ::='MUL_DIV_MODTerm ~ 'Plus_MinusTermList,
-
-    'MUL_DIV_MODTermList ::= 'MUL_DIV_MOD ~ 'MUL_DIV_MODTerm | epsilon(),
-    'MUL_DIV_MODTerm ::= 'LastLevelTerm ~ 'MUL_DIV_MODTermList,
-    */
     'LastLevelList ::=  'OpDefId ~ 'LastLevelTerm | epsilon(),
     'LastLevelTerm ::= 'FinalTerm ~ 'LastLevelList,
 
@@ -127,9 +110,6 @@ object Parser extends Pipeline[ Stream[Token], Program] {
 
     'UNARY ::=  'Operator ~ 'FinalTerm,
     //UNARY ::= 'Id ~ 'FinalTerm,
-    'PLUS_MINUS ::= PLUS() | MINUS() | CONCAT(),
-    'MUL_DIV_MOD ::= TIMES() | DIV() | MOD(),
-    'LESS ::= LESSTHAN() | LESSEQUALS(),
 
     'Literal ::= TRUE() | FALSE() | LPAREN() ~ RPAREN() | INTLITSENT | STRINGLITSENT,
     'LiteralNoEmptyPar ::=  TRUE() | FALSE() | INTLITSENT | STRINGLITSENT,
