@@ -69,9 +69,11 @@ object Parser extends Pipeline[ Stream[Token], Program] {
     'CaseClassDef ::= CASE() ~ CLASS() ~ 'Id ~ LPAREN() ~ 'Params ~ RPAREN() ~ EXTENDS() ~ 'Id,
 
     'FunDef ::=  DEF() ~ 'Id ~ LPAREN() ~ 'Params ~ RPAREN() ~ COLON() ~ 'Type ~ EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE() ,
+    'OperatorDef ::= OPERATOR() ~ INTLITSENT ~  DEF() ~ 'OpDefId ~ LPAREN() ~  'Param ~ COMMA() ~'Param ~ RPAREN() ~ COLON() ~ 'Type  ~ 'OptionalBody ,
     'Operator ::= OPLITSENT,
+    'OpDefId::= OPLITSENT |  PLUS() | MINUS() | DIV() | TIMES()  | OR() | AND() | LESSTHAN() | MOD() | LESSEQUALS() | CONCAT() | EQUALS(),
+    'OptionalBody ::=    EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE() | epsilon(),
 
-    'OperatorDef ::= OPERATOR() ~ INTLITSENT ~  DEF() ~ 'Operator ~ LPAREN() ~ 'Params ~ RPAREN() ~ COLON() ~ 'Type ~ EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE(),
     'Params ::= epsilon() | 'Param ~ 'ParamList,
     'ParamList ::= epsilon() | COMMA() ~ 'Param  ~ 'ParamList,
     'Param ::= 'Id ~ COLON() ~ 'Type,
@@ -82,38 +84,19 @@ object Parser extends Pipeline[ Stream[Token], Program] {
     'Type ::= INT() | STRING() | BOOLEAN() | UNIT() | 'QName,
     'QName ::= 'Id ~ 'QNames,
     'QNames ::= DOT() ~ 'Id | epsilon(),
-    'Expr ::= VAL() ~ 'Param ~ EQSIGN() ~ 'ExprTerm ~ SEMICOLON() ~  'Expr
-      |'ExprTerm ~ 'ExprTail,
+    'Expr ::= VAL() ~ 'Param ~ EQSIGN() ~ 'ExprTerm ~ SEMICOLON() ~  'Expr  |'ExprTerm ~ 'ExprTail,
 
     //'ExprTerm ::= 'OptMatch ~ 'OrTerm ,
-
-    'ExprTerm ::= 'OrTerm ~ 'OptMatch,
+    'ExprTerm ::= 'LastLevelTerm ~ 'OptMatch,
     'OptMatch ::= MATCH() ~ LBRACE() ~ 'Cases ~ RBRACE()| epsilon(),
-    'OrTermList ::=  OR() ~  'OrTerm  | epsilon(),
-    'OrTerm ::= 'AndTerm ~ 'OrTermList,
 
-    'AndTermList ::= AND() ~ 'AndTerm | epsilon(),
-    'AndTerm ::=  'EqTerm ~ 'AndTermList,
-
-    'EqTermList ::= EQUALS() ~'EqTerm | epsilon(),
-    'EqTerm ::= 'LessTerm ~ 'EqTermList,
-
-    'LessTermList ::= 'LESS ~ 'LessTerm| epsilon(),
-    'LessTerm ::= 'Plus_MinusTerm ~ 'LessTermList,
-
-    'Plus_MinusTermList ::= 'PLUS_MINUS ~ 'Plus_MinusTerm | epsilon(),
-    'Plus_MinusTerm ::='MUL_DIV_MODTerm ~ 'Plus_MinusTermList,
-
-    'MUL_DIV_MODTermList ::= 'MUL_DIV_MOD ~ 'MUL_DIV_MODTerm | epsilon(),
-    'MUL_DIV_MODTerm ::= 'LastLevelTerm ~ 'MUL_DIV_MODTermList,
-
-    'LastLevelList ::=  'Operator ~ 'LastLevelTerm | epsilon(),
+    'LastLevelList ::=  'OpDefId ~ 'LastLevelTerm | epsilon(),
     'LastLevelTerm ::= 'FinalTerm ~ 'LastLevelList,
 
 
 
     'FinalTerm ::= 'If | 'Error | 'Id ~ 'OptCall |'LiteralNoEmptyPar | 'EmptyParOrParExpr
-      | BANG() ~ 'FinalTerm | MINUS() ~ 'FinalTerm |'Operator ~ 'FinalTerm,
+      | BANG() ~ 'FinalTerm | MINUS() ~ 'FinalTerm ,
 
     'OptForQname ::= DOT() ~ 'Id | epsilon(),
     'OptForUnary ::= 'UNARY | epsilon(),
@@ -121,15 +104,10 @@ object Parser extends Pipeline[ Stream[Token], Program] {
     'ParExpr ::=  LPAREN() ~ 'Expr ~ RPAREN(),
     'Val ::= 'Id,
     'Call ::= 'QName ~ LPAREN() ~ 'Args ~ RPAREN(),
-   // 'OperatorCall ::=  OPLITSENT ~ 'Expr,
     'Error ::= ERROR() ~ LPAREN() ~ 'Expr ~ RPAREN(),
     'If ::= IF() ~ LPAREN() ~ 'Expr ~ RPAREN() ~ LBRACE() ~ 'Expr ~ RBRACE() ~ ELSE() ~ LBRACE() ~ 'Expr ~ RBRACE(),
 
     'UNARY ::=  'Operator ~ 'FinalTerm,
-    //UNARY ::= 'Id ~ 'FinalTerm,
-    'PLUS_MINUS ::= PLUS() | MINUS() | CONCAT(),
-    'MUL_DIV_MOD ::= TIMES() | DIV() | MOD(),
-    'LESS ::= LESSTHAN() | LESSEQUALS(),
 
     'Literal ::= TRUE() | FALSE() | LPAREN() ~ RPAREN() | INTLITSENT | STRINGLITSENT,
     'LiteralNoEmptyPar ::=  TRUE() | FALSE() | INTLITSENT | STRINGLITSENT,

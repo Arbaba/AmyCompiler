@@ -41,6 +41,7 @@ trait TreeModule {
   case class BooleanLiteral(value: Boolean) extends Literal[Boolean]
   case class StringLiteral(value: String) extends Literal[String]
   case class UnitLiteral() extends Literal[Unit] { val value: Unit = () }
+
   // Binary operators
   case class Plus(lhs: Expr, rhs: Expr) extends Expr
   case class Minus(lhs: Expr, rhs: Expr) extends Expr
@@ -60,6 +61,7 @@ trait TreeModule {
   // Function/ type constructor call
   case class Call(qname : QualifiedName, argsList: List[Expr]) extends Expr
   case class OpCall(qname : QualifiedName, argsList: List[Expr]) extends Expr
+
   // The ; operator
   case class Sequence(e1: Expr, e2: Expr) extends Expr
   // Local variable definition
