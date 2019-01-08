@@ -21,9 +21,9 @@ object Main extends MainHelpers {
       Parser andThen
      PreAnalyzer andThen
       ASTPrecedenceCorrector andThen
-      treePrinterN("Tree after correction")
-      //NameAnalyzer// andThen
-      //TypeChecker// andThen
+      //treePrinterN("Tree after correction")
+      NameAnalyzer andThen
+      TypeChecker// andThen
       //CodeGen andThen
       //CodePrinter
     val operators = new File(s"library/Operators.scala")

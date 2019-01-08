@@ -42,9 +42,9 @@ class ASTConstructorLL1 extends ASTConstructor {
 
            op match {
              case Node('OpDefId ::=_, List(Leaf(OPLIT(operator)))) =>
-               constructOpExpr(OpCall(QualifiedName(Some("Operators"), operator), List(leftopd, nextAtom)), suf)
+               constructOpExpr(OpCall(QualifiedName(None, operator), List(leftopd, nextAtom)), suf)
              case Node('OpDefId ::=_ , List(Leaf(defaultOperator: Token))) =>
-               constructOpExpr(OpCall(QualifiedName(Some("Operators"), binopToString(defaultOperator)), List(leftopd, nextAtom)), suf)
+               constructOpExpr(OpCall(QualifiedName(None, binopToString(defaultOperator)), List(leftopd, nextAtom)), suf)
              case _ =>
                constructOpExpr(constructOp(op)(leftopd, nextAtom).setPos(leftopd),  suf)
 
@@ -154,6 +154,7 @@ class ASTConstructorLL1 extends ASTConstructor {
       case Node('IdOrQnameWithPattern::= List('QName, 'OptPatCall), List(qname, optPatCall)) =>
         optPatCall match {
           case Node('OptPatCall::= _, List(Leaf(lparen), optPatterns, _)) =>
+						println(s"construct $qname")
             optPatterns match {
               case Node('OptPatterns ::= _, List(patterns)) =>
                 CaseClassPattern(constructQname(qname)._1, constructPatterns(patterns))//constr(args
@@ -409,4 +410,3 @@ def constructFinalTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
     }
   }
 }
-

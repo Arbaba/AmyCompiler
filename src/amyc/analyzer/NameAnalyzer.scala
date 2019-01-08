@@ -9,75 +9,25 @@ import ast.{Identifier, NominalTreeModule => N, SymbolicTreeModule => S}
 // and returns a symbolic program, where all names have been resolved to unique Identifiers.
 // Rejects programs that violate the Amy naming rules.
 // Also populates and returns the symbol table.
-object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
-  def run(ctx: Context)(p: N.Program): (S.Program, SymbolTable) = {
+object NameAnalyzer extends Pipeline[(N.Program, SymbolTable), (S.Program, SymbolTable)] {
+  def run(ctx: Context)(input: (N.Program, SymbolTable)): (S.Program, SymbolTable) = {
     import ctx.reporter._
-
-    // Step 0: Initialize symbol table
-    val table = new SymbolTable
-    // Step 1: Add modules to table
-    val modNames = p.modules.groupBy(_.name)
-    modNames.foreach { case (name, modules) =>
-      if (modules.size > 1) {
-        fatal(s"Two modules named $name in program", modules.head.position)
-      }
-    }
-
-    modNames.keys.toList foreach table.addModule
-
-
-    // Helper method: will transform a nominal type 'tt' to a symbolic type,
-    // given that we are within module 'inModule'.
-    def transformType(tt: N.TypeTree, inModule: String): S.Type = {
-      tt.tpe match {
-        case N.IntType => S.IntType
-        case N.BooleanType => S.BooleanType
-        case N.StringType => S.StringType
-        case N.UnitType => S.UnitType
-        case N.ClassType(qn@N.QualifiedName(module, name)) =>
-          table.getType(module getOrElse inModule, name) match {
-            case Some(symbol) =>
-              S.ClassType(symbol)
-            case None =>
-              fatal(s"Could not find type $qn in $inModule", tt)
-          }
-      }
-    }
-
-    // Step 2: Check name uniqueness of *definitions* in each module
-    modNames foreach {
-			case (name, module :: Nil) =>
-			module.defs groupBy (_.name) foreach {
-				case (name, definitions) => if(definitions.size > 1) fatal(s"$name is defined ${definitions.size} times")
+		val (p, table) = input
+def transformType(tt: N.TypeTree, inModule: String): S.Type = {
+	tt.tpe match {
+		case N.IntType => S.IntType
+		case N.BooleanType => S.BooleanType
+		case N.StringType => S.StringType
+		case N.UnitType => S.UnitType
+		case N.ClassType(qn@N.QualifiedName(module, name)) =>
+			table.getType(module getOrElse inModule, name) match {
+				case Some(symbol) =>
+					S.ClassType(symbol)
+				case None =>
+					fatal(s"Could not find type $qn in $inModule", tt)
 			}
-		}
-
-    // Step 3: Discover types and add them to symbol table
-
-		for {
-			(nam, mod :: Nil) <- modNames
-			definition <- mod.defs
-		} definition match {
-			case abs: N.AbstractClassDef => table.addType(nam, abs.name)
-			case N.CaseClassDef(name, _, _) => table.addType(nam, name)
-			case _ => {}
-		}
-
-    // Step 4: Discover type constructors, add them to table
-
-		for {
-			(owner, mod :: Nil) <- modNames
-			N.CaseClassDef(name, fields, parent) <- mod.defs
-			root <- table getType (owner, parent)
-		} table addConstructor (owner, name, fields map { case tt: N.TypeTree => transformType(tt, owner) }, root)
-
-		// Step 5: Discover functions signatures, add them to table
-
-		for {
-			(owner, mod :: Nil) <- modNames
-			N.FunDef(name, param, ret, bdy) <- mod.defs
-		} table addFunction(owner, name, param map (_.tt) map { case tree: N.TypeTree => transformType(tree, owner)},transformType(ret, owner))
-
+	}
+}
     // Step 6: We now know all definitions in the program.
     //         Reconstruct modules and analyse function bodies/ expressions
     // This part is split into three transfrom functions,
@@ -95,7 +45,37 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
 				val tts = fields map { case tt: N.TypeTree => S.TypeTree(transformType(tt, module)) }
 				S.CaseClassDef(getTypeID(module, name), tts, getTypeID(module, parent))
       case fd: N.FunDef => transformFunDef(fd, module)
+			case od: N.OpDef => transformOpDef(od, module)
+
     }}.setPos(df)
+
+		def transformOpDef(fd: N.OpDef, module: String): S.OpDef = {
+      val N.OpDef(name, params, retType, body, precedence) = fd
+      val Some((sym, sig)) = table.getOperator(name)
+			//operator has 2 arguments, enforced by grammar
+      params.groupBy(_.name).foreach { case (name, ps) =>
+        if (ps.size > 1) {
+          fatal(s"Two parameters named $name in function ${fd.name}", fd)
+        }
+      }
+
+      val paramNames = params.map(_.name)
+
+      val newParams = params zip sig.argTypes map { case (pd@N.ParamDef(name, tt), tpe) =>
+        val s = Identifier.fresh(name)
+        S.ParamDef(s, S.TypeTree(tpe).setPos(tt)).setPos(pd)
+      }
+
+      val paramsMap = paramNames.zip(newParams.map(_.name)).toMap
+
+      S.OpDef(
+        sym,
+        newParams,
+        S.TypeTree(sig.retType).setPos(retType),
+        transformExpr(body)(module, (paramsMap, Map())),
+				precedence
+      ).setPos(fd)
+    }
 
     def transformFunDef(fd: N.FunDef, module: String): S.FunDef = {
       val N.FunDef(name, params, retType, body) = fd
@@ -138,12 +118,13 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
     def transformExpr(expr: N.Expr)
                      (implicit module: String, names: (Map[String, Identifier], Map[String, Identifier])): S.Expr = {
 			val (params, locals) = names
-      val res = expr match {
+			val res = expr match {
         case N.Match(scrut, cases) =>
           // Returns a transformed pattern along with all bindings
           // from strings to unique identifiers for names bound in the pattern.
           // Also, calls 'fatal' if a new name violates the Amy naming rules.
           def transformPattern(pat: N.Pattern): (S.Pattern, List[(String, Identifier)]) = {
+						println(s"Pat: $pat")
             pat match {
 							case N.WildcardPattern() =>
 								(S.WildcardPattern(), Nil)
@@ -157,19 +138,18 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
 								bindings.flatten groupBy { case (a, b) => a } foreach {
 									case (s, ids) => if(ids.size > 1) fatal("")
 								}
-								(S.CaseClassPattern(table getType (qname.module.get, qname.name) match {
+								(S.CaseClassPattern(table getType (module, qname.name) match {
 										case Some(tpeCons) => tpeCons
 										case None => fatal(s"could not get type ${qname.name} in ${qname.module}")
 									}
 								, patterns), bindings.flatten)
-
 						}
           }
 
           def transformCase(cse: N.MatchCase) = {
             val N.MatchCase(pat, rhs) = cse
             val (newPat, moreLocals) = transformPattern(pat)
-						moreLocals foreach { case (s, id) => if((names._2 contains s) || (names._1 contains s)) fatal("bad thing") }
+						moreLocals foreach { case (s, id) => if((names._2 contains s) || (names._1 contains s)) fatal(s"$s bad thing $names") }
 						S.MatchCase(newPat, transformExpr(rhs)(module, (names._1, names._2 ++ moreLocals.toMap)))
           }
 

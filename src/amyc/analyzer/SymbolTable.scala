@@ -25,9 +25,9 @@ class SymbolTable {
   private val modules = HashMap[String, Identifier]()
 
 
-	private val types = HashMap[Identifier, Identifier]()
+	 val types = HashMap[Identifier, Identifier]()
   private val functions = HashMap[Identifier, FunSig]()
-	private val operators = HashMap[Identifier, OpSig]()
+	 val operators = HashMap[Identifier, OpSig]()
 
 	private val constructors = HashMap[Identifier, ConstrSig]()
 
@@ -99,7 +99,7 @@ class SymbolTable {
 	//def getOperator(symbol: Identifier) = operators.get(symbol)
 	def getOperator(name: String): Option[(Identifier, OpSig)] = {
     for {
-      sym <- defsByName.get("", name)
+      sym <- defsByName.get("ops*", name)
       sig <- operators.get(sym)
     } yield (sym, sig)
   }

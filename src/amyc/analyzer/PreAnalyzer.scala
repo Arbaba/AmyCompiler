@@ -50,13 +50,39 @@ object PreAnalyzer extends Pipeline[N.Program, (N.Program, SymbolTable)] {
 				case (name, definitions) => if(definitions.size > 1) fatal(s"$name is defined ${definitions.size} times")
 			}
 		}
+		    // Step 3: Discover types and add them to symbol table
+
+				for {
+					(nam, mod :: Nil) <- modNames
+					definition <- mod.defs
+				} definition match {
+					case abs: N.AbstractClassDef => operatorsTable.addType(nam, abs.name)
+					case N.CaseClassDef(name, _, _) => operatorsTable.addType(nam, name)
+					case _ => {}
+				}
+
+		    // Step 4: Discover type constructors, add them to operatorsTable
+
+				for {
+					(owner, mod :: Nil) <- modNames
+					N.CaseClassDef(name, fields, parent) <- mod.defs
+					root <- operatorsTable getType (owner, parent)
+				} operatorsTable addConstructor (owner, name, fields map { case tt: N.TypeTree => transformType(tt, owner) }, root)
+
+				// Step 5: Discover functions signatures, add them to operatorsTable
+
+				for {
+					(owner, mod :: Nil) <- modNames
+					N.FunDef(name, param, ret, bdy) <- mod.defs
+				} operatorsTable addFunction(owner, name, param map (_.tt) map { case tree: N.TypeTree => transformType(tree, owner)},transformType(ret, owner))
+
 		//Discover operator definitions
 		for {
 			(owner, mod :: Nil) <- modNames
 			N.OpDef(name, param, ret, bdy, precedence) <- mod.defs
 		} operatorsTable addOperator (name, param map (_.tt) map { case tree: N.TypeTree => transformType(tree, owner)},transformType(ret, owner), precedence)
 		///Check operators
-
+		println(operatorsTable.operators)
 		(p, operatorsTable)
 	}
 }
