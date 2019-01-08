@@ -26,7 +26,7 @@ object Main extends MainHelpers {
       //TypeChecker// andThen
       //CodeGen andThen
       //CodePrinter
-    val operators = new File("library\\Operators.scala")
+    val operators = new File(s"library/Operators.scala")
     val files = operators :: ctx.files.map(new File(_))
 
     try {

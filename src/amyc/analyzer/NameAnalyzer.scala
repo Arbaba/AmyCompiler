@@ -212,7 +212,7 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
 					}
 					(table getFunction (mod, qname.name),
 					table getConstructor (mod, qname.name),
-					table getOperator (mod, qname.name)) match {
+					table getOperator (qname.name)) match {
 						case (_, _, Some(operator)) => //we already know that the number of arguments matches
 							S.Call(operator._1, args map transformExpr)
 						case (_, Some((id, sig)), _) =>

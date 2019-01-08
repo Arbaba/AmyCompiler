@@ -12,7 +12,8 @@ trait Signature[RT <: Type]{
 }
 // The signature of a function in the symbol table
 case class FunSig(argTypes: List[Type], retType: Type, owner: Identifier) extends Signature[Type]
-case class OpSig(argTypes: List[Type], retType: Type, owner: Identifier, precedence: Int) extends Signature[Type]
+//parent is "ops*" module for all
+case class OpSig(argTypes: List[Type], retType: Type, precedence: Int) extends Signature[Type]
 // The signature of a constructor in the symbol table
 case class ConstrSig(argTypes: List[Type], parent: Identifier, index: Int) extends Signature[ClassType] {
   val retType = ClassType(parent)
@@ -66,7 +67,7 @@ class SymbolTable {
     typesToConstructors += parent -> (typesToConstructors.getOrElse(parent, Nil) :+ s)
     s
   }
-  def getConstructor(name: String): Option[(Identifier, ConstrSig)] = {
+  def getConstructor(owner: String, name: String): Option[(Identifier, ConstrSig)] = {
     for {
       sym <- defsByName.get(owner, name)
       sig <- constructors.get(sym)
@@ -92,11 +93,11 @@ class SymbolTable {
 	def addOperator(name: String, argTypes: List[Type], retType: Type, precedence: Int) = {
     val s = Identifier.fresh(name)
     defsByName += ("ops*", name) -> s
-    operators += s -> OpSig(argTypes, retType, getModule(owner).getOrElse(sys.error(s"Module $owner not found!")), precedence)
+    operators += s -> OpSig(argTypes, retType, precedence)
     s
   }
 	//def getOperator(symbol: Identifier) = operators.get(symbol)
-	def getOperator(owner: String, name: String): Option[(Identifier, OpSig)] = {
+	def getOperator(name: String): Option[(Identifier, OpSig)] = {
     for {
       sym <- defsByName.get("", name)
       sig <- operators.get(sym)

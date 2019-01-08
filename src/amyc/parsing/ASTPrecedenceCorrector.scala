@@ -76,12 +76,12 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
 
     def getOperatorPrecedence(df: N.QualifiedName): Int = {
       df match {
-        case N.QualifiedName(Some(module), name) =>
-          table.getOperator(module, name) match {
-            case Some((_, OpSig(_,_,_,precedence))) =>
+        case N.QualifiedName(None, name) =>
+          table.getOperator(name) match {
+            case Some((_, OpSig(_,_,precedence))) =>
               precedence
             case None =>
-              fatal(s"Operator $module.$name is not in the symbol table")
+              fatal(s"Operator $df is not in the symbol table")
           }
         case N.QualifiedName(None, name) =>
           fatal(s"Operator $name module not saved in the symbol table")
