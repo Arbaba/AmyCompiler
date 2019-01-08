@@ -40,13 +40,13 @@ object Arithmetic {
     a
   }
 
-  operator 200 def +(a: Int, b: Int): Int
 /*
   ~a ? ~b & ~c @ ~d;
   a & b ? c;
   ~a & ~b;
   a ? b & c @ d;
 */
+  a + b * c <= 20;
   f(a1,a2) @ b & d % f - g + 6 *4
 /*
   Std.printInt(pow(0, 10));

@@ -36,9 +36,6 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
               case (Some(left), right ) =>
                 val recLeft = transformExpr(left)
                 val parentRight = transformExpr(args(1))
-                println(left)
-                println(recLeft)
-                println("done")
                 recLeft match {
                   case N.Call(leftOp, List(l,r)) =>
                     val (mod, name) = (leftOp.module, leftOp.name)

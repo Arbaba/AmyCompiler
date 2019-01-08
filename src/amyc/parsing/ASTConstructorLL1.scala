@@ -42,9 +42,9 @@ class ASTConstructorLL1 extends ASTConstructor {
 
            op match {
              case Node('OpDefId ::=_, List(Leaf(OPLIT(operator)))) =>
-               constructOpExpr(OpCall(QualifiedName(Some("Arithmetic"), operator), List(leftopd, nextAtom)), suf)
+               constructOpExpr(OpCall(QualifiedName(Some("Operators"), operator), List(leftopd, nextAtom)), suf)
              case Node('OpDefId ::=_ , List(Leaf(operator: Token))) =>
-               constructOpExpr(OpCall(QualifiedName(Some("Arithmetic"), binopToString(operator)), List(leftopd, nextAtom)), suf)
+               constructOpExpr(OpCall(QualifiedName(Some("Operators"), binopToString(operator)), List(leftopd, nextAtom)), suf)
              case _ =>
                println(op)
                constructOpExpr(constructOp(op)(leftopd, nextAtom).setPos(leftopd),  suf)
@@ -127,11 +127,12 @@ class ASTConstructorLL1 extends ASTConstructor {
             ).setPos(operator)
 
           case Node('OptionalBody::=_, List()) =>
-            val (n, _, Some(typee)) =operatorData(name)
+            val (n, _, Some(typee), Some(function)) =operatorData(name)
+            val args = constructList(params, constructParam, hasComma = true)
             OpDef(n,
-              constructList(params, constructParam, hasComma = true),
+              args,
               TypeTree(typee),
-              UnitLiteral(),
+              function(Variable(args.head.name), Variable(args(1).name)),
               precedence
             ).setPos(operator)
         }
@@ -142,26 +143,26 @@ class ASTConstructorLL1 extends ASTConstructor {
   }
 
 
-  def operatorData(ptree: NodeOrLeaf[Token]): (String, Positioned, Option[Type]) = {
+  def operatorData(ptree: NodeOrLeaf[Token]): (String, Positioned, Option[Type], Option[(Expr, Expr) => Expr]) = {
 
     ptree match {
       case Node('OpDefId ::= _, List(Leaf(id@OPLIT(name)))) =>
-        (name, id, None)
+        (name, id, None, None)
       case Node('Operator ::= _, List(Leaf(id@OPLIT(name)))) =>
-        (name, id, None)
+        (name, id, None, None)
       case Node('OpDefId ::=_ , List(Leaf(op))) =>
         op match {
-          case pos@PLUS() =>      ("+", pos, Some(IntType))
-          case pos@MINUS() =>     ("-", pos, Some(IntType))
-          case pos@TIMES() =>     ("*", pos, Some(IntType))
-          case pos@MOD()=>        ("%", pos, Some(IntType))
-          case pos@DIV() =>       ("/", pos, Some(IntType))
-          case pos@LESSTHAN() =>  ("<", pos, Some(BooleanType))
-          case pos@LESSEQUALS()=> ("<=", pos, Some(BooleanType))
-          case pos@AND()=>        ("&&", pos, Some(BooleanType))
-          case pos@OR()=>         ("||", pos, Some(BooleanType))
-          case pos@EQUALS() =>    ("==", pos, Some(BooleanType))
-          case pos@CONCAT() =>    ("++", pos, Some(StringType))
+          case pos@PLUS() =>      ("+", pos, Some(IntType), Some(Plus))
+          case pos@MINUS() =>     ("-", pos, Some(IntType), Some(Minus))
+          case pos@TIMES() =>     ("*", pos, Some(IntType), Some(Times))
+          case pos@MOD()=>        ("%", pos, Some(IntType), Some(Mod))
+          case pos@DIV() =>       ("/", pos, Some(IntType), Some(Div))
+          case pos@LESSTHAN() =>  ("<", pos, Some(BooleanType), Some(LessThan))
+          case pos@LESSEQUALS()=> ("<=", pos, Some(BooleanType), Some(LessEquals))
+          case pos@AND()=>        ("&&", pos, Some(BooleanType), Some(And))
+          case pos@OR()=>         ("||", pos, Some(BooleanType), Some(Or))
+          case pos@EQUALS() =>    ("==", pos, Some(BooleanType), Some(Equals))
+          case pos@CONCAT() =>    ("++", pos, Some(StringType), Some(Concat))
           case _ => throw new IllegalArgumentException(s"Invalid Id for default operator")
         }
 
@@ -425,7 +426,7 @@ def constructFinalTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
     case Node('FinalTerm ::=List('Operator, 'FinalTerm), List(operator, finalTerm))=>
       operator match {
         case Node('Operator ::=_ , List(Leaf(o@OPLIT(op)))) =>
-          OpCall(QualifiedName(Some("Arithmetic"),op), constructFinalTerm(finalTerm) :: Nil).setPos(o)
+          OpCall(QualifiedName(Some("Operators"),op), constructFinalTerm(finalTerm) :: Nil).setPos(o)
       }
   }
 }

@@ -54,7 +54,7 @@ object PreAnalyzer extends Pipeline[N.Program, (N.Program, SymbolTable)] {
 		for {
 			(owner, mod :: Nil) <- modNames
 			N.OpDef(name, param, ret, bdy, precedence) <- mod.defs
-		} operatorsTable addOperator (owner, name, param map (_.tt) map { case tree: N.TypeTree => transformType(tree, owner)},transformType(ret, owner), precedence)
+		} operatorsTable addOperator ("Operators", name, param map (_.tt) map { case tree: N.TypeTree => transformType(tree, owner)},transformType(ret, owner), precedence)
 		//Check operators
 		def checkArity(expr: N.Expr): Unit = expr match {
 			case N.Match(scrut, cases) =>
