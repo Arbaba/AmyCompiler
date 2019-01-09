@@ -202,6 +202,7 @@ def transformType(tt: N.TypeTree, inModule: String): S.Type = {
 						case (Some(s), _, _) =>
 							if(args.size != s._2.argTypes.size) fatal("arguments!")
 							S.Call(s._1, args map transformExpr)//(modules, names._1, names._2 ++ ))
+						case _ => fatal(s"Did not found $qname")
 					}
 
 				case N.Sequence(expr1, expr2) => S.Sequence(transformExpr(expr1), transformExpr(expr2))

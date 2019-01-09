@@ -36,7 +36,7 @@ object L {
 	}
 */
 	//append operator scala collection-alike
-	def :+(l: List, x: Int): List = {
+	operator 15 def :+(l: List, x: Int): List = {
 		concat(l, Cons(x, Nil()))
 	}
   def headOption(l: List): O.Option = {
@@ -121,15 +121,15 @@ object L {
     l match {
       case Nil() => l
       case Cons(h, Nil()) => l
-      case l =>
-        split(l) match {
+      case s =>
+        split(s) match {
           case LP(l1, l2) =>
             merge(mergeSort(l1), mergeSort(l2))
         }
     }
   }
 
-  def toString(l: List): String = { l match {
+  /*def toString(l: List): String = { l match {
     case Nil() => "List()"
     case more => "List(" ++ toString1(more) ++ ")"
   }}
@@ -138,7 +138,7 @@ object L {
     case Cons(h, Nil()) => Std.intToString(h)
     case Cons(h, t) => Std.intToString(h) ++ ", " ++ toString1(t)
   }}
-
+*/
   def take(l: List, n: Int): List = {
     if (n <= 0) { Nil() }
     else {
@@ -149,5 +149,8 @@ object L {
       }
     }
   }
+
+	val l: List = Nil() :+ 1 :+ 2;
+	l
 
 }

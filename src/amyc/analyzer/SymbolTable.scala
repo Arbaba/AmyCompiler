@@ -104,6 +104,7 @@ class SymbolTable {
     } yield (sym, sig)
   }
 
+	def getOperator(symbol: Identifier) = operators get symbol
 
   def printOperators = println(operators)
 }

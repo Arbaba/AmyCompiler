@@ -26,9 +26,9 @@ object Matrix {
 		Pair(a, b)
 	}
 
-	val I: Matrix2x2 = Matrix2x2(1, 0, 0, 1);
-	val swap: Matrix2x2 = Matrix2x2(0, 1, 1, 0);
-	val W: Matrix2x2 = Matrix2x2(53, 36, 24, 34);
-	val x: Vector2 = Vector2(5, 3);
-	W @ (I @ W)
+	val I: Matrix = Matrix2x2(1, 0, 0, 1);
+	//val swap: Matrix2x2 = Matrix2x2(0, 1, 1, 0);
+	//val W: Matrix2x2 = Matrix2x2(53, 36, 24, 34);
+	//val x: Vector2 = Vector2(5, 3);
+	I @ I
 }
