@@ -20,13 +20,25 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
     def cgModule(moduleDef: ModuleDef): List[Function] = {
       val ModuleDef(name, defs, optExpr) = moduleDef
       // Generate code for all functions
-      defs.collect { case fd: FunDef if !builtInFunctions(fullName(name, fd.name)) =>
-        cgFunction(fd, name, false)
+      	defs.collect {
+					case fd: FunDef if !builtInFunctions(fullName(name, fd.name)) => cgFunction(fd, name, false)
+					case od: OpDef => cgOperator(od)
       } ++
       // Generate code for the "main" function, which contains the module expression
       optExpr.toList.map { expr =>
         val mainFd = FunDef(Identifier.fresh("main"), Nil, TypeTree(IntType), expr)
         cgFunction(mainFd, name, true)
+      }
+    }
+
+		// Generate code for an operator
+    def cgOperator(od: OpDef): Function = {
+      // Note: We create the wasm function name from a combination of
+      // module and function name, since we put everything in the same wasm module
+			println(s"define ${od.name}")
+      Function(od.name.name, od.params.size, false){ lh =>
+        val locals = od.paramNames.zipWithIndex.toMap
+        cgExpr(od.body)(locals, lh)
       }
     }
 
@@ -47,7 +59,10 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
         }
       }
     }
-
+		/*for {
+			module.defs
+			op	<- List("+", "-", "*")
+		} cgFunction(op)*/
 
     // Generate code for an expression expr.
     // Additional arguments are a mapping from identifiers (parameters and variables) to
@@ -143,8 +158,7 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
 								table.getOperator(qname.name) match {
 									case Some((id, OpSig(argTypes, retType, _))) =>
 										val argsToStack = for (arg <- args) yield cgExpr(arg)
-										println(s"$id")
-				            Call("ops*" + "_" + id.name)//argsToStack <:> Call(id.name)
+										argsToStack <:> Call(id.name)
 									case None => fatal("Error @ codegen")
 								}
             }
