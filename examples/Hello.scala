@@ -1,4 +1,4 @@
 object Hello {
   //Std.printString("Hello world!")
-	1 + 2
+	error("Hello World!")
 }

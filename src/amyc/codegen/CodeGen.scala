@@ -120,7 +120,7 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
 					cgExpr(scrut) <:>
 					SetLocal(scruti) <:> // @scrut
 					matchAndBind(cases, scruti)*/
-				case Sequence(e1, e2) => cgExpr(e1) <:> cgExpr(e2)
+				case Sequence(e1, e2) => cgExpr(e1) <:> Drop <:> cgExpr(e2)
 			}
     }
 
