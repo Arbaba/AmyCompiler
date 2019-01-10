@@ -1,5 +1,5 @@
 object Arithmetic {
-  def pow(b: Int, e: Int): Int = {
+  /*def pow(b: Int, e: Int): Int = {
     if (e == 0) { 1 }
     else {
       if (e % 2 == 0) {
@@ -21,7 +21,7 @@ object Arithmetic {
         gcd(a % b, b)
       }
     }
-  }
+  }*/
 
 
   /*Std.printInt(pow(0, 10));
@@ -33,7 +33,7 @@ object Arithmetic {
   Std.printInt(gcd(16, 46)); // 2
   Std.printInt(gcd(222, 888))*/ // 222
 
-	Std.printInt(1);
+	//Std.printInt(1);
 	error("ok")
 
 }
