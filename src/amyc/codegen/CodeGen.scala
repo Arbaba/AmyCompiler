@@ -2,27 +2,27 @@ package amyc
 package codegen
 
 import analyzer._
-import ast.{Identifier, SymbolicTreeModule}
-import ast.SymbolicTreeModule.{And => AmyAnd, Call => AmyCall, Div => AmyDiv, Or => AmyOr, _}
+import ast.Identifier
+import ast.SymbolicTreeModule.{Call => AmyCall, Div => AmyDiv, And => AmyAnd, Or => AmyOr, _}
 import utils.{Context, Pipeline}
-import Utils.fullName
-import wasm.{Instructions, _}
+import wasm._
 import Instructions._
 import Utils._
 
 // Generates WebAssembly code for an Amy program
 object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
   def run(ctx: Context)(v: (Program, SymbolTable)): Module = {
-		import ctx.reporter._
     val (program, table) = v
+		import ctx.reporter._
 
+	val seq = (a: Code, b: Code) => a <:> b
     // Generate code for an Amy module
     def cgModule(moduleDef: ModuleDef): List[Function] = {
       val ModuleDef(name, defs, optExpr) = moduleDef
       // Generate code for all functions
-      	defs.collect {
-					case fd: FunDef if !builtInFunctions(fullName(name, fd.name)) => cgFunction(fd, name, false)
-					case od: OpDef => cgOperator(od)
+      defs.collect {
+				case fd: FunDef if !builtInFunctions(fullName(name, fd.name)) => cgFunction(fd, name, false)
+				case od: OpDef => cgOperator(od)
       } ++
       // Generate code for the "main" function, which contains the module expression
       optExpr.toList.map { expr =>
@@ -31,8 +31,7 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
       }
     }
 
-		// Generate code for an operator
-    def cgOperator(od: OpDef): Function = {
+		def cgOperator(od: OpDef): Function = {
       // Note: We create the wasm function name from a combination of
       // module and function name, since we put everything in the same wasm module
 			println(s"define ${od.name}")
@@ -47,7 +46,6 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
       // Note: We create the wasm function name from a combination of
       // module and function name, since we put everything in the same wasm module.
       val name = fullName(owner, fd.name)
-			println(s"define $name")
       Function(name, fd.params.size, isMain){ lh =>
         val locals = fd.paramNames.zipWithIndex.toMap
         val body = cgExpr(fd.body)(locals, lh)
@@ -59,137 +57,79 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
         }
       }
     }
-		/*for {
-			module.defs
-			op	<- List("+", "-", "*")
-		} cgFunction(op)*/
 
     // Generate code for an expression expr.
     // Additional arguments are a mapping from identifiers (parameters and variables) to
     // their index in the wasm local variables, and a LocalsHandler which will generate
     // fresh local slots as required.
-    def cgExpr(expr: Expr)(implicit locals: Map[Identifier, Int], lh: LocalsHandler): Instructions.Code =
-      expr match {
-      case IntLiteral(lit) =>
-        i2c(Const(lit))
-      case StringLiteral(str)=>
-        mkString(str)
-      case UnitLiteral() =>
-        i2c(Const(0))
-      case BooleanLiteral(bool) =>
-        if(true) Const(1) else Const(0)
-      case Variable(name) =>
-        GetLocal(locals(name))
-      //Arith Operators
-      case  Plus(lhs: Expr, rhs: Expr)   =>
-        cgExpr(lhs).<:>(cgExpr(rhs)).<:>(Add)
-      case  Minus(lhs: Expr, rhs: Expr) =>
-        cgExpr(lhs).<:>(cgExpr(rhs)).<:>(Sub)
-      case  Times(lhs: Expr, rhs: Expr) =>
-        cgExpr(lhs).<:>(cgExpr(rhs)).<:>(Mul)
-      case  SymbolicTreeModule.Div(lhs: Expr, rhs: Expr) =>
-        cgExpr(lhs).<:>(cgExpr(rhs)).<:>(Div)
-      case  Mod(lhs: Expr, rhs: Expr) =>
-        cgExpr(lhs).<:>(cgExpr(rhs)).<:>(Rem)
-      //Boolean Operators
-      case  LessThan(lhs: Expr, rhs: Expr)  =>
-        cgExpr(lhs).<:>(cgExpr(rhs)).<:>(Lt_s)
+    def cgExpr(expr: Expr)(implicit locals: Map[Identifier, Int], lh: LocalsHandler): Code = {
+			def loadOperands(lhs: Expr, rhs: Expr): Code = cgExpr(lhs) <:> cgExpr(rhs)
+			expr match {
+				case Variable(n) => GetLocal(locals(n))
+				case IntLiteral(i) => Const(i)
+				case BooleanLiteral(b) => Const(if(b) 1 else 0)
+				case StringLiteral(s) => mkString(s)
+				case UnitLiteral() => Const(0)
+				case Plus(lhs, rhs) => loadOperands(lhs, rhs) <:> Add
+				case Minus(lhs, rhs) => loadOperands(lhs, rhs) <:> Sub
+				case Times(lhs, rhs) => loadOperands(lhs, rhs) <:> Mul
+				case AmyDiv(lhs, rhs) => loadOperands(lhs, rhs) <:> Div
+				case Mod(lhs, rhs) => loadOperands(lhs, rhs) <:> Rem
+				case LessThan(lhs, rhs) =>
+					loadOperands(lhs, rhs) <:>
+					Lt_s
+				case LessEquals(lhs, rhs) => loadOperands(lhs, rhs) <:> Le_s
+				case AmyAnd(lhs, rhs) => loadOperands(lhs, rhs) <:> And
+				case AmyOr(lhs, rhs) => loadOperands(lhs, rhs) <:> Or
+				case Equals(lhs, rhs) => loadOperands(lhs, rhs) <:> Eq
+				case Concat(lhs, rhs) =>
+					loadOperands(lhs, rhs) <:>
+					Call("String_concat")
+				case Not(e) => cgExpr(e) <:> If_i32 <:> Const(0) <:> Else <:> Const(1) <:> End
+				case Neg(e) =>
+					Const(0) <:>
+					cgExpr(e) <:>
+					Sub
+				case Ite(i, t, e) =>
+					cgExpr(i) <:>
+					If_i32 <:>
+					cgExpr(t) <:>
+					Else <:>
+					cgExpr(e) <:>
+					End
+				case AmyCall(qname, args) =>
+					val func = program.modules.filter { case mod: ModuleDef => mod.defs.map(_.name).exists(id => id.toString == qname.name.toString) }
+					(table getConstructor qname, table getFunction qname, table getOperator qname) match {
+						case (Some(ConstrSig(argTypes, _, idx)), _, _) =>
+							fatal("ADT constructors not implemented")
+						case (_, Some(_), _) =>
+							(args map cgExpr reduceLeft seq) <:>
+							Call(func(0).name.toString + "_" + qname.name)
+						case (_, _, Some(_)) =>
+							(args map cgExpr reduceLeft seq) <:>
+							Call(qname.name)
+					}
+				case Let(ParamDef(name, tt), v, bdy) =>
+					val i = lh.getFreshLocal
+					cgExpr(v) <:>
+					SetLocal(i) <:>
+					cgExpr(bdy)(locals + (name -> i), lh)
+				case Error(err) => mkString("Error:	") <:> cgExpr(err) <:> Call("Std_printString") <:> Unreachable
+				/*case Match(scrut, cases) =>
+					val scruti = lh.getFreshLocal()
+					cgExpr(scrut) <:>
+					SetLocal(scruti) <:> // @scrut
+					matchAndBind(cases, scruti)*/
+				case Sequence(e1, e2) => cgExpr(e1) <:> cgExpr(e2)
+			}
+    }
 
-      case  LessEquals(lhs: Expr, rhs: Expr)  =>
-        cgExpr(lhs).<:>(cgExpr(rhs)).<:>(Le_s)
+    Module(
+      program.modules.last.name.name,
+      defaultImports,
+      globalsNo,
+      wasmFunctions ++ (program.modules flatMap cgModule)
+    )
 
-      case  SymbolicTreeModule.And(lhs: Expr, rhs: Expr) =>
-        //cgExpr(lhs).<:>(cgExpr(rhs)).<:>(And)
-        //ShortCircuit
-        cgExpr(lhs) <:> If_i32 <:> cgExpr(rhs) <:> Else <:> Const(0) <:> End
-      case  SymbolicTreeModule.Or(lhs: Expr, rhs: Expr) =>
-        //cgExpr(lhs).<:>(cgExpr(rhs)).<:>(Or)
-        cgExpr(lhs) <:> If_i32 <:> Const(1) <:>  Else <:> cgExpr(rhs) <:> End
-
-      case  Equals(lhs: Expr, rhs: Expr) =>
-        cgExpr(lhs).<:>(cgExpr(rhs)).<:>(Eq)
-
-      //String concatenation
-      case  Concat(lhs: Expr, rhs: Expr) =>
-        cgExpr(lhs) <:>
-        cgExpr(rhs) <:>
-        Call(concatImpl.name)
-
-
-      //Unary Operators
-      case Not(e) =>
-        Const(0) <:> cgExpr(e) <:> Sub
-      case Neg(e) =>
-        cgExpr(e) <:>
-        Eqz
-
-      //Rest
-      case SymbolicTreeModule.Call(qname, args) =>
-        table.getFunction(qname) match {
-          case Some(FunSig(argTypes, retType, owner)) =>
-            val argsToStack = for (arg <- args) yield cgExpr(arg)
-            argsToStack <:> Call(fullName(owner, qname))
-          case None =>
-            table.getConstructor(qname) match {
-              case Some(ConstrSig(argTypes, parent, index)) =>
-                val oldMemBoundary = lh.getFreshLocal()
-                val padding = argTypes.size * 4 + 1
-                val storeArgs: List[Code] = for ((arg, index) <- args.zipWithIndex) yield {
-                  GetLocal(oldMemBoundary) <:> Const(index * 4 + 1) <:> Add <:> cgExpr(arg) <:> Store
-                }
-
-                val setMemory = {
-                  GetGlobal(memoryBoundary) <:>
-                    SetLocal(oldMemBoundary) <:>
-                    GetGlobal(memoryBoundary) <:>
-                    Const(padding) <:>
-                    Add <:>
-                    SetGlobal(memoryBoundary)
-                }
-
-                val setIndex = {
-                  GetLocal(oldMemBoundary) <:>
-                    Const(index) <:>
-                    Add <:>
-                    Store
-                }
-                setMemory <:> setIndex <:> storeArgs
-              case None =>
-								table.getOperator(qname.name) match {
-									case Some((id, OpSig(argTypes, retType, _))) =>
-										val argsToStack = for (arg <- args) yield cgExpr(arg)
-										argsToStack <:> Call(id.name)
-									case None => fatal("Error @ codegen")
-								}
-            }
-        }
-case Sequence(e1, e2) =>
-        cgExpr(e1) <:> Drop <:> cgExpr(e2)
-
-case Let(ParamDef(name, TypeTree(typee)), value, body) =>
-	val i = lh.getFreshLocal()
-	 cgExpr(value) <:> SetLocal(i)  <:> cgExpr(body)(locals + (name -> i),lh)
-case Ite(cond, thenn, elze) =>
-	 cgExpr(cond) <:>
-	 If_i32 <:>
-	 cgExpr(thenn) <:>
-	 Else <:>
-	 cgExpr(elze) <:>
-	 End
-
-
-case Error(msg) =>
-// fatal(msg, msg.position)
-        cgExpr(msg) <:> Call("Std_printString") <:> Instructions.Unreachable
-
-}
-
-Module(
-program.modules.last.name.name,
-defaultImports,
-globalsNo,
-wasmFunctions ++ (program.modules flatMap cgModule)
-)
-
-}
+  }
 }
