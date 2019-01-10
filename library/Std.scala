@@ -32,17 +32,28 @@ object Std {
     }
   }
   def digitToString(i: Int): String = {
-		i match {
-			case 0 => "0"
-			case 1 => "1"
-			case 2 => "2"
-			case 3 => "3"
-			case 4 => "4"
-			case 5 => "5"
-			case 6 => "6"
-			case 7 => "7"
-			case 8 => "8"
-			case 9 => "9"
+		if(i < 5) {
+			if(i < 2) {
+				if(i == 0) {"0"}
+				else {"1"}
+			}
+			else {
+				if(i == 3) {"3"}
+				else {"4"}
+			}
+		}
+		else {
+			if(i < 7) {
+				if(i == 5) {"5"}
+				else {"6"}
+			}
+			else {
+				if(i == 7) {"7"}
+				else {
+					if(i == 8) {"8"}
+					else {"9"}
+				}
+			}
 		}
     //error("") // Stub implementation
   }

@@ -1,7 +1,19 @@
 object Operators {
 	operator 100 def **(x: Int, y: Int): Int = {
-		Arithmetic.pow(x, y)
+		pow(x, y)
 	}
+
+  def pow(b: Int, e: Int): Int = {
+    if (e == 0) { 1 }
+    else {
+      if (e % 2 == 0) {
+        val rec: Int = pow(b, e/2);
+        rec * rec
+      } else {
+        b * pow(b, e - 1)
+      }
+    }
+  }
 
 	operator 50 def <<(x: Int, y: Int): Int = {
 		if(y == 0) {

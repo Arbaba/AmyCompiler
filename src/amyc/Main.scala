@@ -23,9 +23,9 @@ object Main extends MainHelpers {
       ASTPrecedenceCorrector andThen
       //treePrinterN("Tree after correction")
       NameAnalyzer andThen
-      TypeChecker //andThen
-      //CodeGen andThen
-      //CodePrinter
+      TypeChecker andThen
+      CodeGen andThen
+      CodePrinter
     val operators = new File(s"library/Operators.scala")
     val files = operators :: ctx.files.map(new File(_))
 

@@ -13,6 +13,7 @@ import Utils._
 // Generates WebAssembly code for an Amy program
 object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
   def run(ctx: Context)(v: (Program, SymbolTable)): Module = {
+		import ctx.reporter._
     val (program, table) = v
 
     // Generate code for an Amy module
@@ -34,6 +35,7 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
       // Note: We create the wasm function name from a combination of
       // module and function name, since we put everything in the same wasm module.
       val name = fullName(owner, fd.name)
+			println(s"define $name")
       Function(name, fd.params.size, isMain){ lh =>
         val locals = fd.paramNames.zipWithIndex.toMap
         val body = cgExpr(fd.body)(locals, lh)
@@ -138,74 +140,33 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
                 }
                 setMemory <:> setIndex <:> storeArgs
               case None =>
-                //fatal(s"The table doesn't contain a constructor for $qname", expr.position)
-                Code(Nil)
+								table.getOperator(qname.name) match {
+									case Some((id, OpSig(argTypes, retType, _))) =>
+										val argsToStack = for (arg <- args) yield cgExpr(arg)
+										println(s"$id")
+				            Call("ops*" + "_" + id.name)//argsToStack <:> Call(id.name)
+									case None => fatal("Error @ codegen")
+								}
             }
         }
 case Sequence(e1, e2) =>
         cgExpr(e1) <:> Drop <:> cgExpr(e2)
 
 case Let(ParamDef(name, TypeTree(typee)), value, body) =>
-val i = lh.getFreshLocal()
- cgExpr(value) <:> SetLocal(i)  <:> cgExpr(body)(locals + (name -> i),lh)
+	val i = lh.getFreshLocal()
+	 cgExpr(value) <:> SetLocal(i)  <:> cgExpr(body)(locals + (name -> i),lh)
 case Ite(cond, thenn, elze) =>
- cgExpr(cond) <:>
- If_i32 <:>
- cgExpr(thenn) <:>
- Else <:>
- cgExpr(elze) <:>
- End
+	 cgExpr(cond) <:>
+	 If_i32 <:>
+	 cgExpr(thenn) <:>
+	 Else <:>
+	 cgExpr(elze) <:>
+	 End
 
 
 case Error(msg) =>
 // fatal(msg, msg.position)
         cgExpr(msg) <:> Call("Std_printString") <:> Instructions.Unreachable
-case Match(scrut, cases) =>
-// Returns additional constraints from within the pattern with all bindings
-// from identifiers to types for names bound in the pattern.
-// (This is analogous to `transformPattern` in NameAnalyzer.)
-  def matchAndBind(scrutCode :Code, casee: Pattern): (Code, Map[Identifier, Int]) = casee match {
-    case WildcardPattern() => (Const(1), Map.empty)
-    case LiteralPattern(lit) => (scrutCode <:> cgExpr(lit) <:> Eq, Map.empty)
-    case IdPattern(id) =>
-      val localVar = lh.getFreshLocal()
-      val comparison = scrutCode <:> SetLocal(localVar) <:>  Const(1)
-      (comparison, locals + (id -> localVar))
-    case CaseClassPattern(qname, args) =>
-      val allocateScrut = lh.getFreshLocal()
-      val writeScrut = scrutCode <:> SetLocal(allocateScrut) <:> GetLocal(allocateScrut) <:> Load
-
-      val Some(ConstrSig(argsTypes, parent, identifier)) = table.getConstructor(qname)
-
-      val compareIds = Const(identifier) <:> Eq
-      //We call match and bind on each argument
-      val compareArgs : List[(Code, Map[Identifier, Int]) ]= {
-        for( (arg, index) <- args.zipWithIndex) yield{
-          matchAndBind(GetLocal(allocateScrut) <:> Utils.adtField(index) <:> Load, arg)
-        }
-     }
-
-      val matchConditions = compareArgs.map(x => x._1)
-      val argsWithChainedConditional = {
-        matchConditions match {
-          case Nil => Nil
-          case x :: Nil => List(x)
-          case x :: y :: z => (x <:> y <:> And) ::  z.map(x => x <:> And)
-        }
-      }
-      val bindings = if(!compareArgs.isEmpty){ compareArgs.map(_._2).reduce{(x,y ) => x ++ y}} else Map.empty[Identifier, Int]
-      (writeScrut <:> compareIds <:> If_i32 <:> argsWithChainedConditional <:> Else <:> Const(0) <:> End, bindings)
-  }
-
-  val matches : List[(Code, Code)] = cases.map{case MatchCase(pat, ex)=> {
-        val (code, bindings) = matchAndBind(cgExpr(scrut), pat)
-      (code, cgExpr(ex)(bindings ++ locals,lh))
-
-      }
-  }
-  //We write the conditions to return the correct match body. We use shortCircuit as well
-  val matchesWithCondition : List[Code]= matches.map{case(cond, expr) => cond <:> If_i32 <:> expr <:> Else }  ::: i2c(Const(0))  :: matches.map(x => i2c(End))
-  matchesWithCondition.reduce(_<:>_)
 
 }
 

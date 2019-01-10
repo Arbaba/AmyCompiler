@@ -11,7 +11,7 @@ object Arithmetic {
     }
   }
 
-  def gcd(a: Int, b: Int): Int = {
+  /*def gcd(a: Int, b: Int): Int = {
     if (a == 0 || b == 0) {
       a + b
     } else {
@@ -21,19 +21,18 @@ object Arithmetic {
         gcd(a % b, b)
       }
     }
-  }
+  }*/
 
 
-/*
-  Std.printInt(pow(0, 10));
+  /*Std.printInt(pow(0, 10));
   Std.printInt(pow(1, 5));
   Std.printInt(pow(2, 10));
   Std.printInt(pow(3, 3));
   Std.printInt(gcd(0, 10));
   Std.printInt(gcd(17, 99)); // 1
   Std.printInt(gcd(16, 46)); // 2
-  Std.printInt(gcd(222, 888)) // 222
-*/
+  Std.printInt(gcd(222, 888)) // 222*/
+
 
 
 }
