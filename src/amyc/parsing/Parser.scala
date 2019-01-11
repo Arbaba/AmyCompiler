@@ -70,7 +70,6 @@ object Parser extends Pipeline[ Stream[Token], Program] {
 
     'FunDef ::=  DEF() ~ 'Id ~ LPAREN() ~ 'Params ~ RPAREN() ~ COLON() ~ 'Type ~ EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE() ,
     'OperatorDef ::= OPERATOR() ~ INTLITSENT ~  DEF() ~ 'OpDefId ~ LPAREN() ~  'Param ~ COMMA() ~'Param ~ RPAREN() ~ COLON() ~ 'Type  ~ 'OptionalBody ,
-    'Operator ::= OPLITSENT,
     'OpDefId::= OPLITSENT |  PLUS() | MINUS() | DIV() | TIMES()  | OR() | AND() | LESSTHAN() | MOD() | LESSEQUALS() | CONCAT() | EQUALS(),
     'OptionalBody ::=    EQSIGN() ~ LBRACE() ~ 'Expr ~ RBRACE() | epsilon(),
 
@@ -99,7 +98,6 @@ object Parser extends Pipeline[ Stream[Token], Program] {
       | BANG() ~ 'FinalTerm | MINUS() ~ 'FinalTerm ,
 
     'OptForQname ::= DOT() ~ 'Id | epsilon(),
-    'OptForUnary ::= 'UNARY | epsilon(),
     'OptCall ::= 'OptForQname ~ LPAREN() ~ 'Args ~ RPAREN() | epsilon(),
     'ParExpr ::=  LPAREN() ~ 'Expr ~ RPAREN(),
     'Val ::= 'Id,
@@ -107,7 +105,6 @@ object Parser extends Pipeline[ Stream[Token], Program] {
     'Error ::= ERROR() ~ LPAREN() ~ 'Expr ~ RPAREN(),
     'If ::= IF() ~ LPAREN() ~ 'Expr ~ RPAREN() ~ LBRACE() ~ 'Expr ~ RBRACE() ~ ELSE() ~ LBRACE() ~ 'Expr ~ RBRACE(),
 
-    'UNARY ::=  'Operator ~ 'FinalTerm,
 
     'Literal ::= TRUE() | FALSE() | LPAREN() ~ RPAREN() | INTLITSENT | STRINGLITSENT,
     'LiteralNoEmptyPar ::=  TRUE() | FALSE() | INTLITSENT | STRINGLITSENT,
