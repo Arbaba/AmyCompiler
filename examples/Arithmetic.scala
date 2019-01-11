@@ -14,16 +14,6 @@ object Arithmetic {
 	operator 100 def **(x: Int, y: Int): Int = {
 		pow(x, y)
 	}
-
-	/*operator 50 def <<(x: Int, y: Int): Int = {
-		if(y == 0) {
-			x
-		}
-		else {
-			2 * x << y - 1
-		}
-	}*/
-
   def gcd(a: Int, b: Int): Int = {
     if (a == 0 || b == 0) {
       a + b
@@ -38,6 +28,14 @@ object Arithmetic {
 	operator 5 def ^(x: Int, y: Int): Int = {
 		gcd(x, y)
 	}
+	operator 3 def <<(x: Int, y: Int): Int = {
+		if(y == 0) {
+			x
+		}
+		else {
+			2 * x << y - 1
+		}
+	}
 	//Std.printInt(pow(0, 10))
   Std.printInt(1**5);
   Std.printInt(2**10);
@@ -48,8 +46,9 @@ object Arithmetic {
   Std.printInt(222 ^ 888);
 	Std.printInt(3 ^ 7**2 * 3);
 	Std.printInt(7 ^ 8);
-
-	Std.printInt(2*3*5 ^ (2*3)**2 % 5)
+	Std.printInt(2*3*5 ^ 2*3**2);
+	Std.printString("Should be 4:");
+	Std.printInt(2 << 1 ** 2);
 	//gcd()
 
 }

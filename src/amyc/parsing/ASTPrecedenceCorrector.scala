@@ -60,7 +60,9 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
         case N.Ite(cond, thenn, elze) =>  N.Ite(transformExpr(cond), transformExpr(thenn), transformExpr(elze))
         case N.Match(scrut, cases) =>
           N.Match(transformExpr(scrut), cases.map{case N.MatchCase(pat, expr) => N.MatchCase(pat, transformExpr(expr))})
-        case _ =>
+
+				case N.Error(err) => transformExpr(err)
+				case _ =>
           expr
 
 
