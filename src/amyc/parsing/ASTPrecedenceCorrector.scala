@@ -16,7 +16,7 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
   def run(ctx: Context)(v: (N.Program, SymbolTable)): (N.Program, SymbolTable) = {
     import ctx.reporter._
     val (p, table) = v
-
+    //Correct the precedence of function and operators definition
     def transformOpAndFunDef(expr: N.ClassOrFunDef)(implicit module: String): N.ClassOrFunDef = {
       expr match {
         case N.FunDef(name, params, retType, body) =>
@@ -26,7 +26,7 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
         case x => x
       }
     }
-
+    //Correct the precedence of an expression
     def transformExpr(expr: N.Expr)(implicit module:String): N.Expr = {
       expr match {
         case parent@N.OpCall(parentName, args) =>
@@ -44,10 +44,7 @@ object ASTPrecedenceCorrector  extends Pipeline[(N.Program, SymbolTable),(N.Prog
                     }else {
                       N.Call(parentName, recLeft :: parentRight :: Nil)
                     }
-
-
                 }
-
               case (None , _) =>
                 N.Call(parentName, args.map(transformExpr(_)))
             }

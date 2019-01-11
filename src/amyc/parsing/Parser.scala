@@ -85,14 +85,11 @@ object Parser extends Pipeline[ Stream[Token], Program] {
     'QNames ::= DOT() ~ 'Id | epsilon(),
     'Expr ::= VAL() ~ 'Param ~ EQSIGN() ~ 'ExprTerm ~ SEMICOLON() ~  'Expr  |'ExprTerm ~ 'ExprTail,
 
-    //'ExprTerm ::= 'OptMatch ~ 'OrTerm ,
     'ExprTerm ::= 'LastLevelTerm ~ 'OptMatch,
     'OptMatch ::= MATCH() ~ LBRACE() ~ 'Cases ~ RBRACE()| epsilon(),
 
     'LastLevelList ::=  'OpDefId ~ 'LastLevelTerm | epsilon(),
     'LastLevelTerm ::= 'FinalTerm ~ 'LastLevelList,
-
-
 
     'FinalTerm ::= 'If | 'Error | 'Id ~ 'OptCall |'LiteralNoEmptyPar | 'EmptyParOrParExpr
       | BANG() ~ 'FinalTerm | MINUS() ~ 'FinalTerm ,

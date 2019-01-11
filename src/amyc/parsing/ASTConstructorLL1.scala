@@ -45,9 +45,6 @@ class ASTConstructorLL1 extends ASTConstructor {
                constructOpExpr(OpCall(QualifiedName(None, operator), List(leftopd, nextAtom)), suf)
              case Node('OpDefId ::=_ , List(Leaf(defaultOperator: Token))) =>
                constructOpExpr(OpCall(QualifiedName(None, binopToString(defaultOperator)), List(leftopd, nextAtom)), suf)
-             case _ =>
-               constructOpExpr(constructOp(op)(leftopd, nextAtom).setPos(leftopd),  suf)
-
            }
             // captures left associativity
          case Node(_, List()) =>
@@ -61,15 +58,6 @@ class ASTConstructorLL1 extends ASTConstructor {
 
 
 
- def constructQnames(pTree: NodeOrLeaf[Token]): Option[(String, Positioned)] = {
-   pTree match {
-     case Node('Qnames ::= List(DOT(), 'Id), List(_, id) ) =>
-       Some(constructName(id))
-     case Node('Qnames ::= _, List()) =>
-       None
-   }
- }
-
   override def constructDef0(pTree: NodeOrLeaf[Token]): ClassOrFunDef = {
 
     pTree match {
@@ -78,7 +66,7 @@ class ASTConstructorLL1 extends ASTConstructor {
     optionalBody match {
           case Node('OptionalBody ::=_ , List(_,_,body,_)) =>
 
-            OpDef(operatorData(name)._1,
+            OpDef(newOperatorData(name)._1,
               params,
               constructType(retType),
               constructExpr(body),
@@ -86,7 +74,7 @@ class ASTConstructorLL1 extends ASTConstructor {
             ).setPos(operator)
 
           case Node('OptionalBody::=_, List()) =>
-            val (n, _, Some(typee), Some(function)) =operatorData(name)
+            val (n, _, typee,  function) =defaultOperatorData(name)
             OpDef(n,
               params,
               TypeTree(typee),
@@ -101,30 +89,35 @@ class ASTConstructorLL1 extends ASTConstructor {
   }
 
 
-  def operatorData(ptree: NodeOrLeaf[Token]): (String, Positioned, Option[Type], Option[(Expr, Expr) => Expr]) = {
 
+  def newOperatorData(ptree: NodeOrLeaf[Token]): (String, Positioned) = {
     ptree match {
       case Node('OpDefId ::= _, List(Leaf(id@OPLIT(name)))) =>
-        (name, id, None, None)
-      case Node('Operator ::= _, List(Leaf(id@OPLIT(name)))) =>
-        (name, id, None, None)
-      case Node('OpDefId ::=_ , List(Leaf(op))) =>
-        op match {
-          case pos@PLUS() =>      ("+", pos, Some(IntType), Some(Plus))
-          case pos@MINUS() =>     ("-", pos, Some(IntType), Some(Minus))
-          case pos@TIMES() =>     ("*", pos, Some(IntType), Some(Times))
-          case pos@MOD()=>        ("%", pos, Some(IntType), Some(Mod))
-          case pos@DIV() =>       ("/", pos, Some(IntType), Some(Div))
-          case pos@LESSTHAN() =>  ("<", pos, Some(BooleanType), Some(LessThan))
-          case pos@LESSEQUALS()=> ("<=", pos, Some(BooleanType), Some(LessEquals))
-          case pos@AND()=>        ("&&", pos, Some(BooleanType), Some(And))
-          case pos@OR()=>         ("||", pos, Some(BooleanType), Some(Or))
-          case pos@EQUALS() =>    ("==", pos, Some(BooleanType), Some(Equals))
-          case pos@CONCAT() =>    ("++", pos, Some(StringType), Some(Concat))
-          case _ => throw new IllegalArgumentException(s"Invalid Id for default operator")
-        }
+        (name, id)
+      case _ => throw new IllegalArgumentException(s"Invalid Id for a new operator")
 
     }
+
+  }
+  def defaultOperatorData(ptree: NodeOrLeaf[Token]): (String, Positioned, Type,(Expr, Expr) => Expr)=  ptree match {
+    case Node('OpDefId ::=_ , List(Leaf(op))) =>
+      op match {
+        case pos@PLUS() =>      ("+", pos, IntType, Plus)
+        case pos@MINUS() =>     ("-", pos, IntType, Minus)
+        case pos@TIMES() =>     ("*", pos, IntType, Times)
+        case pos@MOD()=>        ("%", pos, IntType, Mod)
+        case pos@DIV() =>       ("/", pos, IntType, Div)
+        case pos@LESSTHAN() =>  ("<", pos, BooleanType, LessThan)
+        case pos@LESSEQUALS()=> ("<=", pos,BooleanType, LessEquals)
+        case pos@AND()=>        ("&&", pos,BooleanType, And)
+        case pos@OR()=>         ("||", pos,BooleanType, Or)
+        case pos@EQUALS() =>    ("==", pos,BooleanType, Equals)
+        case pos@CONCAT() =>    ("++", pos,StringType, Concat)
+        case _ => throw new IllegalArgumentException(s"Invalid Id for default operator")
+      }
+    case _ => throw new IllegalArgumentException(s"Invalid Id for default operator")
+
+
   }
 
   override def constructCase(pTree: NodeOrLeaf[Token]): MatchCase = {
@@ -258,9 +251,7 @@ class ASTConstructorLL1 extends ASTConstructor {
         }
     }
   }
-// Need to add  Minus
 def constructFinalTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
- // println(ptree)
   ptree match {
     case Node('FinalTerm ::= List('LiteralNoEmptyPar), List(lit)) =>
       constructLiteral(lit)
@@ -287,8 +278,6 @@ def constructFinalTerm(ptree: NodeOrLeaf[Token]): NominalTreeModule.Expr = {
 
     case Node('FinalTerm ::= List('EmptyParOrParExpr), List(unitOrExpr)) =>
       constructEmptyParOrParExpr(unitOrExpr)
-   /* case Node('FinalTerm ::= ('EmptyParOrParExpr ::_), List(foo)) =>
-      constructEmptyParOrParExpr(foo)*/
     case Node('FinalTerm ::= (BANG() :: 'FinalTerm ::_), List(Leaf(justForPos), finalTerm)) =>
      Not(constructFinalTerm(finalTerm)).setPos(justForPos)
     case Node('FinalTerm ::= (MINUS() :: 'FinalTerm ::_), List(Leaf(justForPos), finalTerm)) =>
