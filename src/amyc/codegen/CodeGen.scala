@@ -34,7 +34,6 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
 		def cgOperator(od: OpDef): Function = {
       // Note: We create the wasm function name from a combination of
       // module and function name, since we put everything in the same wasm module
-			println(s"define ${od.name}")
       Function(od.name.name, od.params.size, false){ lh =>
         val locals = od.paramNames.zipWithIndex.toMap
         cgExpr(od.body)(locals, lh)

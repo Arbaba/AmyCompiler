@@ -82,7 +82,6 @@ object PreAnalyzer extends Pipeline[N.Program, (N.Program, SymbolTable)] {
 			N.OpDef(name, param, ret, bdy, precedence) <- mod.defs
 		} operatorsTable addOperator (name, param map (_.tt) map { case tree: N.TypeTree => transformType(tree, owner)},transformType(ret, owner), precedence)
 		///Check operators
-		println(operatorsTable.operators)
 		(p, operatorsTable)
 	}
 }

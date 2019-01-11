@@ -1,4 +1,3 @@
 target/
 project/
-wasmout/
 *.DS_Store

@@ -124,7 +124,6 @@ def transformType(tt: N.TypeTree, inModule: String): S.Type = {
           // from strings to unique identifiers for names bound in the pattern.
           // Also, calls 'fatal' if a new name violates the Amy naming rules.
           def transformPattern(pat: N.Pattern): (S.Pattern, List[(String, Identifier)]) = {
-						println(s"Pat: $pat")
             pat match {
 							case N.WildcardPattern() =>
 								(S.WildcardPattern(), Nil)

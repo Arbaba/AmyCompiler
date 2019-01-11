@@ -25,9 +25,9 @@ class SymbolTable {
   private val modules = HashMap[String, Identifier]()
 
 
-	 val types = HashMap[Identifier, Identifier]()
+	private val types = HashMap[Identifier, Identifier]()
   private val functions = HashMap[Identifier, FunSig]()
-	 val operators = HashMap[Identifier, OpSig]()
+	private val operators = HashMap[Identifier, OpSig]()
 
 	private val constructors = HashMap[Identifier, ConstrSig]()
 
@@ -50,7 +50,6 @@ class SymbolTable {
     s
   }
   def getType(owner: String, name: String) = {
-		println(s"getting $name in $owner")
 		defsByName.get(owner,name) //filter types.contains
 	}
 

@@ -36,19 +36,6 @@ object Arithmetic {
 			2 * x << y - 1
 		}
 	}
-	//Std.printInt(pow(0, 10))
-  Std.printInt(1**5);
-  Std.printInt(2**10);
-  Std.printInt(3**3);
-  Std.printInt(0**10);
-  Std.printInt(17 ^ 99); // 1
-  Std.printInt(16 ^ 46); // 2
-  Std.printInt(222 ^ 888);
-	Std.printInt(3 ^ 7**2 * 3);
-	Std.printInt(7 ^ 8);
-	Std.printInt(2*3*5 ^ 2*3**2);
 	Std.printString("Should be 4:");
-	Std.printInt(2 << 1 ** 2);
-	//gcd()
-
+	Std.printInt(2 << 1 ** 2)
 }
